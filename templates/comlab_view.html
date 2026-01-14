@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="10">
+    <title>{{ lab_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+          integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --gray: #6c757d;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #edf1f7;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Legacy top-bar styles removed - using topbar component */
+
+        /* AI Alert Box */
+        .ai-alert-box {
+            background: #fff8e1;
+            border: 1px solid #ffd54f;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 900px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+        .alert-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .alert-card p {
+            margin: 0;
+            color: #856404;
+            font-weight: 500;
+        }
+
+        .view-details-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .view-details-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Toggle Button */
+        .toggle-ai-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 15px;
+            transition: background 0.3s, transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-ai-btn:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Smooth show/hide animation */
+        .hidden {
+            display: none;
+        }
+
+        /* Details Table */
+        .details-table {
+            margin-top: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            overflow: hidden;
+        }
+
+        .details-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table th, .details-table td {
+            border-bottom: 1px solid #eee;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .details-table th {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Devices Table */
+        .table-responsive-wrapper {
+            width: 95%;
+            margin: 20px auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table.devices {
+            border-collapse: collapse;
+            margin: 0 auto;
+            width: 100%;
+            min-width: 600px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table.devices th, table.devices td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        table.devices th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .status-used {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-free {
+            color: red;
+            font-weight: bold;
+        }
+
+        .delete-device-btn {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .delete-device-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        .modal-content h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            margin-top: 0;
+        }
+
+        .modal-content p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .modal-btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .modal-btn-secondary {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #1e7e34;
+        }
+
+        .modal-btn-tertiary {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .modal-btn-tertiary:hover {
+            background-color: #e0a800;
+        }
+
+        @media (max-width: 900px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .top-bar-actions {
+                width: 100%;
+            }
+            .top-bar-actions button {
+                flex: 1;
+            }
+            .table-responsive-wrapper {
+                width: 100%;
+                margin: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'comlab_view' %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Top Bar -->
+        {% include 'includes/topbar.html' %}
+        {% block topbar_actions %}
+        <button onclick="window.location.href='/comlab/{{ comlab_id }}/inventory'" style="background:white;color:#007bff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;">
+            <i class="fas fa-keyboard"></i> <span class="hide-mobile">Inventory</span>
+        </button>
+        <button onclick="openAddDeviceModal()" style="background: var(--success); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; min-height: 44px;">
+            <i class="fas fa-plus"></i> <span class="hide-mobile">Add Device</span>
+        </button>
+        {% endblock %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <div class="table-responsive-wrapper">
+            <table class="devices">
+    <thead>
+    <tr>
+        <th>PC Tag</th>
+        <th>MAC Address</th>
+        <th>Unique ID</th>
+        <th>Assigned Student</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+{% for device in devices %}
+    <tr id="device-row-{{ device.id }}">
+        <td>{{ device.tag or '—' }}</td>
+        <td style="font-family: monospace; font-size: 13px;">{{ device.mac_address or '—' }}</td>
+        <td style="font-family: monospace; font-size: 12px; word-break: break-all; max-width: 200px;">
+            {% if device.unique_id %}
+                {{ device.unique_id[:8] }}...{{ device.unique_id[-8:] }}
+                <span title="{{ device.unique_id }}" style="cursor: help; color: #6c757d;">
+                    <i class="fas fa-info-circle"></i>
+                </span>
+            {% else %}
+                —
+            {% endif %}
+        </td>
+        <td>{{ device.student_name or '—' }}</td>
+        <td>
+            {% if device.student_name %}
+                <span class="status-used"><i class="fas fa-check"></i> In Use</span>
+            {% else %}
+                <span class="status-free"><i class="fas fa-times"></i> Available</span>
+            {% endif %}
+        </td>
+        <td>
+            <button class="delete-device-btn" onclick="deleteDevice('{{ device.id }}')">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
+
+</table>
+            </div>
+        </div>
+    </div>
+
+<!-- Add Device Modal -->
+<div id="addDeviceModal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeAddDeviceModal()">&times;</button>
+        <h2>🔗 Device Registration Link</h2>
+        <p>Copy and open this link on the device you want to register:</p>
+        <input type="text" id="deviceLink" readonly>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-primary" onclick="copyLink()">
+                <i class="fas fa-copy"></i> Copy Link
+            </button>
+            <button class="modal-btn modal-btn-tertiary" onclick="openLinkInNewTab()">
+                <i class="fas fa-external-link-alt"></i> Open in New Tab
+            </button>
+            <button class="modal-btn modal-btn-secondary" onclick="closeAddDeviceModal()">
+                <i class="fas fa-check"></i> Done
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔁 JS TOGGLE AND DELETE FUNCTIONS -->
+<script>
+    function toggleAIHistory() {
+        const box = document.getElementById('ai-history');
+        box.classList.toggle('hidden');
+    }
+
+    function toggleDetails(tag) {
+        const el = document.getElementById('details-' + tag);
+        el.classList.toggle('hidden');
+    }
+
+    function deleteDevice(deviceId) {
+        if (!confirm("Are you sure you want to delete this device?")) return;
+
+        fetch(`/api/delete_device`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({id: deviceId})
+        })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.success) {
+                    const row = document.getElementById(`device-row-${deviceId}`);
+                    if (row) row.remove();
+                } else {
+                    alert("Failed to delete device: " + (resp.message || ""));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error deleting device.");
+            });
+    }
+
+    function openAddDeviceModal() {
+        // Generate link via API with comlab_id parameter
+        const comlabId = {{ comlab_id }};
+        fetch(`/generate_link?comlab_id=${comlabId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('deviceLink').value = data.link;
+                    document.getElementById('addDeviceModal').classList.add('active');
+                } else {
+                    alert('Failed to generate link. Please try again.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error generating link. Please try again.');
+            });
+    }
+
+    function closeAddDeviceModal() {
+        document.getElementById('addDeviceModal').classList.remove('active');
+    }
+
+    function copyLink() {
+        const linkInput = document.getElementById('deviceLink');
+        linkInput.select();
+        linkInput.setSelectionRange(0, 99999); // For mobile devices
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+            alert('✅ Link copied to clipboard!');
+        }).catch(() => {
+            // Fallback for older browsers
+            document.execCommand('copy');
+            alert('✅ Link copied to clipboard!');
+        });
+    }
+
+    function openLinkInNewTab() {
+        const linkInput = document.getElementById('deviceLink');
+        const link = linkInput.value;
+        if (link) {
+            window.open(link, '_blank');
+        } else {
+            alert('No link available to open.');
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('addDeviceModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddDeviceModal();
+        }
+    });
+</script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+</body>
+</html>

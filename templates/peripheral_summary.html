@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Peripheral Summary - Computer Lab {{ comlab_id }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+<style>
+:root{
+    --primary:#007bff;
+    --success:#28a745;
+    --danger:#dc3545;
+    --warning:#ffc107;
+    --info:#17a2b8;
+    --gray:#6c757d;
+}
+
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 25px;
+}
+
+/* Legacy top-bar styles removed - using topbar component */
+
+
+/* FILTERS */
+.filters {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.filters input, .filters select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    min-height: 44px;
+}
+
+.clear-btn, .print-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 9px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex; align-items:center; gap:6px;
+}
+.print-btn { background: var(--info); }
+.clear-btn:hover { background: #c82333; }
+.print-btn:hover { background: #138496; }
+
+/* TABLE */
+.table-responsive-wrapper {
+    width: 95%;
+    margin: 20px auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+table {
+    width: 100%;
+    min-width: 800px;
+    background: white;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:0 5px 20px rgba(0,0,0,0.15);
+}
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+tr:hover { background: #f1f1f1; }
+
+textarea {
+    width: 95%;
+    min-height: 40px;
+    resize: vertical;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.save-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+.save-btn:hover { background: #218838; }
+
+/* Status Badges */
+.badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    color: white;
+}
+.connected { background: var(--success); }
+.unplugged { background: var(--gray); }
+.faulty { background: var(--danger); }
+.missing { background: var(--warning); color:black; }
+.replaced { background: var(--info); }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    body { padding: 0; }
+    .filters { flex-direction: column; padding: 12px; gap: 10px; }
+    .filters input, .filters select { width: 100%; margin-bottom: 0; }
+    .table-responsive-wrapper { width: 100%; margin: 10px auto; }
+    table { min-width: 600px; font-size: 14px; }
+    th, td { padding: 8px 6px; font-size: 13px; }
+    .clear-btn, .print-btn { width: 100%; justify-content: center; margin-top: 8px; }
+}
+
+@media (max-width: 480px) {
+    table { min-width: 500px; }
+    th, td { padding: 6px 4px; font-size: 12px; }
+    .badge { font-size: 11px; padding: 4px 8px; }
+    textarea { font-size: 12px; }
+}
+
+/* Print Styles */
+@media print {
+    .filters, .menu-buttons button { display:none !important; }
+    .save-btn, textarea { display:none !important; }
+
+    /* Show remarks as text instead of textarea */
+    td.remarks::before {
+        content: attr(data-text);
+        display: block;
+    }
+    td.remarks textarea { display:none; }
+
+    body { background:white; }
+    table { box-shadow:none; }
+}
+</style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'peripheral_summary' %}
+    {% set comlab_id = comlab_id %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Top Bar -->
+        {% include 'includes/topbar.html' %}
+        {% block topbar_actions %}
+        <button class="print-btn" onclick="window.print()" style="background:white;color:#007bff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;"><i class="fas fa-print"></i> <span class="hide-mobile">Print PDF</span></button>
+        {% endblock %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+<!-- FILTERS -->
+<div class="filters">
+    <select id="filter-pc">
+        <option value="">All PC Names</option>
+        {% for pc in peripherals|map(attribute='assigned_pc')|unique %}
+            <option value="{{ pc }}">{{ pc }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" id="filter-serial" placeholder="Search Serial Number">
+    <input type="text" id="filter-unique" placeholder="Search Unique ID">
+    <select id="filter-device">
+        <option value="">All Device Names</option>
+        {% for d in peripherals|map(attribute='name')|unique %}
+            <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+    </select>
+    <select id="filter-status">
+        <option value="">All Status</option>
+        <option value="CONNECTED">CONNECTED</option>
+        <option value="UNPLUGGED">UNPLUGGED</option>
+        <option value="FAULTY">FAULTY</option>
+        <option value="MISSING">MISSING</option>
+        <option value="REPLACED">REPLACED</option>
+    </select>
+    <button class="clear-btn" id="clearFilters"><i class="fas fa-times-circle"></i> Clear Filters</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-responsive-wrapper">
+<table>
+<thead>
+<tr>
+    <th>PC NAME</th>
+    <th>SERIAL NUMBER</th>
+    <th>UNIQUE ID</th>
+    <th>DEVICE NAME</th>
+    <th>BRAND</th>
+    <th>STATUS</th>
+    <th>REMARKS</th>
+    <th>ACTION</th>
+</tr>
+</thead>
+<tbody id="peripheralTable">
+{% for p in peripherals %}
+<tr>
+    <td class="pc">{{ p.assigned_pc }}</td>
+    <td class="serial">{{ p.serial_number }}</td>
+    <td class="unique">{{ p.unique_id }}</td>
+    <td class="device">{{ p.name }}</td>
+    <td>{{ p.brand }}</td>
+    <td class="status"><span class="badge {{ p.status }}">{{ p.status }}</span></td>
+<td class="remarks" data-text="{{ p.remarks }}">
+    <textarea id="remarks-{{ p.unique_id }}">{{ p.remarks }}</textarea>
+</td>
+    <td>
+        <button class="save-btn" onclick="saveRemarks('{{ p.unique_id }}')">Save</button>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<script>
+function saveRemarks(uid){
+    const val = document.getElementById("remarks-" + uid).value;
+    fetch("/update_peripheral_remarks", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({unique_id:uid,remarks:val})
+    })
+    .then(r=>r.json())
+    .then(d=>{ alert(d.success?"Saved!":"Failed to save"); })
+    .catch(err=>console.error(err));
+}
+
+function applyFilters(){
+    const pc = document.getElementById("filter-pc").value.toLowerCase();
+    const serial = document.getElementById("filter-serial").value.toLowerCase();
+    const unique = document.getElementById("filter-unique").value.toLowerCase();
+    const device = document.getElementById("filter-device").value.toLowerCase();
+    const status = document.getElementById("filter-status").value.toLowerCase();
+
+    document.querySelectorAll("#peripheralTable tr").forEach(row=>{
+        let show = true;
+        if(pc && !row.querySelector(".pc").innerText.toLowerCase().includes(pc)) show=false;
+        if(serial && !row.querySelector(".serial").innerText.toLowerCase().includes(serial)) show=false;
+        if(unique && !row.querySelector(".unique").innerText.toLowerCase().includes(unique)) show=false;
+        if(device && !row.querySelector(".device").innerText.toLowerCase().includes(device)) show=false;
+        if(status && !row.querySelector(".status").innerText.toLowerCase().includes(status)) show=false;
+        row.style.display = show ? "" : "none";
+    });
+}
+
+document.querySelectorAll(".filters input, .filters select").forEach(el=>{
+    el.addEventListener("input", applyFilters);
+});
+document.getElementById("clearFilters").onclick = ()=>{
+    document.querySelectorAll(".filters input, .filters select").forEach(el=>el.value="");
+    applyFilters();
+};
+</script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+        </div>
+    </div>
+</body>
+</html>

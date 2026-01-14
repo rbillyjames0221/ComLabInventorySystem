@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Unregistered Devices</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+<style>
+    body { font-family:'Segoe UI',sans-serif; background:#eef2f7; margin:0; padding:0; }
+    
+    /* Filters */
+    .filter-box { width:95%; margin:20px auto; background:white; padding:15px; display:flex; gap:10px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,.1); align-items:center; flex-wrap:wrap; }
+    .filter-box input, .filter-box select { padding:10px; border-radius:6px; border:1px solid #ccc; min-width:140px; font-size:16px; min-height:44px; }
+    @media (max-width:768px) {
+        .filter-box { flex-direction:column; }
+        .filter-box input, .filter-box select { width:100%; }
+        .top-bar { flex-direction:column; align-items:flex-start; }
+        .top-bar-actions { width:100%; }
+        .top-bar-actions button { flex:1; }
+    }
+    .apply-btn, .clear-btn { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:600; }
+    .apply-btn { background:#007bff; color:white; }
+    .apply-btn:hover { background-color: #0056b3; }
+    .clear-btn { background-color: #dc3545; color: white; }
+    .clear-btn:hover { background-color: #b02a37; }
+    
+    /* Table */
+    .table-responsive-wrapper { width:95%; margin:20px auto; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table { width:100%; min-width:700px; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; }
+    th, td { padding:12px; border-bottom:1px solid #e5e5e5; text-align:center; vertical-align:middle; }
+    th { background:#007bff; color:white; position:sticky; top:0; z-index:10; }
+    tr:hover { background:#f5f5f5; }
+    
+    .register-btn { background:#28a745; padding:6px 12px; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; }
+    .register-btn:hover { background:#218838; }
+    
+    .warning-badge { background:#ffc107; color:#856404; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+    
+    /* Modal */
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,.4); }
+    .modal-content { background:white; width:90%; max-width:600px; margin:5% auto; padding:30px; border-radius:10px; }
+    .close { float:right; cursor:pointer; font-size:24px; font-weight:bold; }
+    .modal-content input, .modal-content select { width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; }
+    .modal-content label { display:block; margin-bottom:5px; font-weight:600; }
+    .modal-buttons { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+    
+    .scanning-overlay { text-align: center; padding: 40px; color: #6c757d; }
+    .scanning-overlay i { font-size: 48px; color: #007bff; margin-bottom: 15px; animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'unregistered_devices' %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Top Bar -->
+        {% include 'includes/topbar.html' %}
+        {% block topbar_actions %}
+        <button id="refreshBtn" onclick="scanUnregisteredDevices()" title="Auto-refresh is active (every 5 seconds)" style="background:white;color:#007bff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;">
+            <i class="fas fa-sync-alt"></i> <span class="hide-mobile">Refresh</span>
+            <span id="autoRefreshIndicator" style="margin-left: 5px; font-size: 10px; opacity: 0.7;">🔄</span>
+        </button>
+        {% endblock %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+<div class="filter-box">
+    <input id="searchInput" placeholder="Search by device name or brand..." style="min-width:250px;">
+    <button class="apply-btn" onclick="applyFilters()">Apply</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear</button>
+</div>
+
+<div id="scanningOverlay" class="scanning-overlay" style="display:none;">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Scanning for unregistered devices...</p>
+</div>
+
+<div class="table-responsive-wrapper">
+<table id="devicesTable" style="display:none;">
+    <thead>
+    <tr>
+        <th>Device Name</th>
+        <th>Brand</th>
+        <th>Vendor ID</th>
+        <th>Product ID</th>
+        <th>Unique ID</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="devicesTableBody">
+    </tbody>
+</table>
+</div>
+
+<div id="noDevicesMessage" style="text-align:center; padding:40px; display:none;">
+    <i class="fas fa-check-circle" style="font-size:48px; color:#28a745; margin-bottom:15px;"></i>
+    <p style="font-size:18px; color:#6c757d;">No unregistered devices found. All connected devices are registered!</p>
+</div>
+
+<!-- Register Device Modal -->
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRegisterModal()">&times;</span>
+        <h3>Register Device</h3>
+        <form id="registerDeviceForm" onsubmit="registerDevice(event)">
+            <input type="hidden" id="regUniqueId">
+            <input type="hidden" id="regVendor">
+            <input type="hidden" id="regProduct">
+            
+            <label>Device Name:</label>
+            <input type="text" id="regName" required>
+            
+            <label>Brand:</label>
+            <input type="text" id="regBrand" required>
+            
+            <label>PC Tag:</label>
+            <select id="regPcTag" required>
+                <option value="">-- Select PC --</option>
+            </select>
+            
+            <label>ComLab Location:</label>
+            <select id="regLabId" required>
+                <option value="">-- Select ComLab --</option>
+            </select>
+            
+            <div class="modal-buttons">
+                <button type="button" class="clear-btn" onclick="closeRegisterModal()">Cancel</button>
+                <button type="submit" class="register-btn">Register Device</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let unregisteredDevicesData = [];
+let allDevices = [];
+let allLabs = [];
+let autoRefreshInterval = null;
+const AUTO_REFRESH_INTERVAL = 5000; // Refresh every 5 seconds
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadLabsAndDevices();
+    scanUnregisteredDevices();
+    // Start automatic refresh
+    startAutoRefresh();
+});
+
+// Start automatic refresh
+function startAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    autoRefreshInterval = setInterval(() => {
+        scanUnregisteredDevices(true); // Pass true to indicate silent refresh
+    }, AUTO_REFRESH_INTERVAL);
+    
+    // Update indicator
+    const indicator = document.getElementById('autoRefreshIndicator');
+    if (indicator) {
+        indicator.style.display = 'inline';
+        indicator.style.animation = 'spin 2s linear infinite';
+    }
+}
+
+// Stop automatic refresh
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+    
+    // Update indicator
+    const indicator = document.getElementById('autoRefreshIndicator');
+    if (indicator) {
+        indicator.style.animation = 'none';
+        indicator.style.opacity = '0.3';
+    }
+}
+
+async function loadLabsAndDevices() {
+    try {
+        // Load labs
+        const labsResponse = await fetch('/api/labs');
+        const labsData = await labsResponse.json();
+        if (labsData.success) {
+            allLabs = labsData.labs || [];
+            populateLabSelect();
+        }
+        
+        // Load devices for each lab
+        for (const lab of allLabs) {
+            try {
+                const devicesResponse = await fetch(`/api/devices_by_lab?lab_id=${lab.id}`);
+                const devicesData = await devicesResponse.json();
+                if (devicesData.success && devicesData.devices) {
+                    allDevices = allDevices.concat(devicesData.devices.map(d => ({
+                        ...d,
+                        lab_id: lab.id,
+                        lab_name: lab.name
+                    })));
+                }
+            } catch (e) {
+                console.log(`Could not load devices for lab ${lab.id}:`, e);
+            }
+        }
+        populatePcTagSelect();
+    } catch (error) {
+        console.error('Error loading labs/devices:', error);
+    }
+}
+
+function populateLabSelect() {
+    const select = document.getElementById('regLabId');
+    select.innerHTML = '<option value="">-- Select ComLab --</option>';
+    allLabs.forEach(lab => {
+        const option = document.createElement('option');
+        option.value = lab.id;
+        option.textContent = lab.name;
+        select.appendChild(option);
+    });
+}
+
+function populatePcTagSelect() {
+    const select = document.getElementById('regPcTag');
+    select.innerHTML = '<option value="">-- Select PC --</option>';
+    allDevices.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.tag;
+        option.textContent = `${device.tag} (${device.lab_name})`;
+        option.dataset.labId = device.lab_id;
+        select.appendChild(option);
+    });
+    
+    // Auto-select lab when PC is selected
+    select.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.dataset.labId) {
+            document.getElementById('regLabId').value = selectedOption.dataset.labId;
+        }
+    });
+}
+
+async function scanUnregisteredDevices(silent = false) {
+    // Only show overlay if not silent refresh
+    if (!silent) {
+        document.getElementById('scanningOverlay').style.display = 'block';
+        document.getElementById('devicesTable').style.display = 'none';
+        document.getElementById('noDevicesMessage').style.display = 'none';
+    }
+    
+    try {
+        const response = await fetch('/api/unregistered_devices');
+        const data = await response.json();
+        
+        if (!silent) {
+            document.getElementById('scanningOverlay').style.display = 'none';
+        }
+        
+        if (data.success && data.devices && data.devices.length > 0) {
+            // Check if the list has changed
+            const previousCount = unregisteredDevicesData.length;
+            const previousUniqueIds = new Set(unregisteredDevicesData.map(d => d.unique_id));
+            const newUniqueIds = new Set(data.devices.map(d => d.unique_id));
+            
+            // Detect new devices
+            const addedDevices = data.devices.filter(d => !previousUniqueIds.has(d.unique_id));
+            // Detect removed devices (registered or disconnected)
+            const removedDevices = unregisteredDevicesData.filter(d => !newUniqueIds.has(d.unique_id));
+            
+            // Update the data
+            unregisteredDevicesData = data.devices;
+            
+            // Apply current filter if any
+            const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+            let devicesToRender = unregisteredDevicesData;
+            if (searchValue) {
+                devicesToRender = unregisteredDevicesData.filter(device => {
+                    const name = (device.name || '').toLowerCase();
+                    const brand = (device.brand || '').toLowerCase();
+                    return name.includes(searchValue) || brand.includes(searchValue);
+                });
+            }
+            
+            renderDevicesTable(devicesToRender);
+            document.getElementById('devicesTable').style.display = 'table';
+            document.getElementById('noDevicesMessage').style.display = 'none';
+            
+            // Show visual feedback for changes (only if not silent or if there are significant changes)
+            if (!silent || addedDevices.length > 0 || removedDevices.length > 0) {
+                if (addedDevices.length > 0) {
+                    showNotification(`${addedDevices.length} new unregistered device(s) detected`, 'success');
+                }
+                if (removedDevices.length > 0) {
+                    showNotification(`${removedDevices.length} device(s) removed (registered or disconnected)`, 'info');
+                }
+            }
+        } else {
+            // Check if we had devices before but now don't
+            if (unregisteredDevicesData.length > 0 && (!data.devices || data.devices.length === 0)) {
+                showNotification('All devices have been registered or disconnected', 'success');
+            }
+            unregisteredDevicesData = [];
+            document.getElementById('devicesTable').style.display = 'none';
+            document.getElementById('noDevicesMessage').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error scanning devices:', error);
+        if (!silent) {
+            document.getElementById('scanningOverlay').style.display = 'none';
+            document.getElementById('noDevicesMessage').style.display = 'block';
+            document.getElementById('noDevicesMessage').innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size:48px; color:#ffc107; margin-bottom:15px;"></i>
+                <p style="font-size:18px; color:#6c757d;">Could not scan for devices. Device detection requires Windows.</p>
+            `;
+        }
+    }
+}
+
+// Show notification toast
+function showNotification(message, type = 'info') {
+    // Remove existing notification if any
+    const existing = document.getElementById('updateNotification');
+    if (existing) {
+        existing.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.id = 'updateNotification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'info' ? '#17a2b8' : '#ffc107'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-triangle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderDevicesTable(devices) {
+    const tbody = document.getElementById('devicesTableBody');
+    const currentRows = Array.from(tbody.querySelectorAll('tr'));
+    const currentUniqueIds = new Set(currentRows.map(row => row.dataset.uniqueId));
+    const newUniqueIds = new Set(devices.map(d => d.unique_id));
+    
+    // Remove rows for devices that are no longer in the list
+    currentRows.forEach(row => {
+        const uniqueId = row.dataset.uniqueId;
+        if (!newUniqueIds.has(uniqueId)) {
+            // Add fade-out animation
+            row.style.transition = 'opacity 0.3s ease-out';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 300);
+        }
+    });
+    
+    // Add or update rows for devices
+    devices.forEach(device => {
+        // Find existing row by iterating (more reliable than querySelector with special chars)
+        let existingRow = null;
+        for (let row of currentRows) {
+            if (row.dataset.uniqueId === device.unique_id) {
+                existingRow = row;
+                break;
+            }
+        }
+        
+        const uniqueIdDisplay = device.unique_id && device.unique_id.length > 16
+            ? `${device.unique_id.substring(0, 8)}...${device.unique_id.substring(device.unique_id.length - 8)}`
+            : (device.unique_id || '—');
+        
+        const row = existingRow || document.createElement('tr');
+        row.dataset.uniqueId = device.unique_id;
+        
+        // Create cells using textContent for safety
+        row.innerHTML = `
+            <td>${escapeHtml(device.name || '—')}</td>
+            <td>${escapeHtml(device.brand || '—')}</td>
+            <td style="font-family: monospace; font-size: 12px;">${escapeHtml(device.vendor || '—')}</td>
+            <td style="font-family: monospace; font-size: 12px;">${escapeHtml(device.product || '—')}</td>
+            <td style="font-family: monospace; font-size: 11px; word-break: break-all;">${escapeHtml(uniqueIdDisplay)}</td>
+            <td><span class="warning-badge"><i class="fas fa-exclamation-triangle"></i> Unregistered</span></td>
+            <td>
+                <button class="register-btn" onclick="openRegisterModal('${escapeHtml(device.unique_id)}', '${escapeHtml(device.name || '')}', '${escapeHtml(device.brand || '')}', '${escapeHtml(device.vendor || '')}', '${escapeHtml(device.product || '')}')">
+                    <i class="fas fa-plus"></i> Register
+                </button>
+            </td>
+        `;
+        
+        if (!existingRow) {
+            // Add new row with fade-in animation
+            row.style.opacity = '0';
+            tbody.appendChild(row);
+            // Trigger fade-in animation
+            setTimeout(() => {
+                row.style.transition = 'opacity 0.3s ease-in';
+                row.style.opacity = '1';
+            }, 10);
+        }
+    });
+}
+
+function openRegisterModal(uniqueId, name, brand, vendor, product) {
+    document.getElementById('regUniqueId').value = uniqueId;
+    document.getElementById('regName').value = name || '';
+    document.getElementById('regBrand').value = brand || '';
+    document.getElementById('regVendor').value = vendor || '';
+    document.getElementById('regProduct').value = product || '';
+    document.getElementById('registerModal').style.display = 'block';
+}
+
+function closeRegisterModal() {
+    document.getElementById('registerModal').style.display = 'none';
+    document.getElementById('registerDeviceForm').reset();
+}
+
+async function registerDevice(event) {
+    event.preventDefault();
+    
+    const data = {
+        pc_tag: document.getElementById('regPcTag').value,
+        lab_id: parseInt(document.getElementById('regLabId').value),
+        name: document.getElementById('regName').value,
+        brand: document.getElementById('regBrand').value,
+        unique_id: document.getElementById('regUniqueId').value,
+        serial_number: document.getElementById('regUniqueId').value
+    };
+    
+    try {
+        const response = await fetch('/api/register_unregistered_device', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Device registered successfully!', 'success');
+            closeRegisterModal();
+            // Refresh immediately to remove the registered device from the list
+            scanUnregisteredDevices(false);
+        } else {
+            alert('Error: ' + (result.message || 'Failed to register device'));
+        }
+    } catch (error) {
+        console.error('Error registering device:', error);
+        alert('An error occurred while registering the device.');
+    }
+}
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    if (!search) {
+        renderDevicesTable(unregisteredDevicesData);
+        return;
+    }
+    
+    const filtered = unregisteredDevicesData.filter(device => {
+        const name = (device.name || '').toLowerCase();
+        const brand = (device.brand || '').toLowerCase();
+        return name.includes(search) || brand.includes(search);
+    });
+    
+    renderDevicesTable(filtered);
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    renderDevicesTable(unregisteredDevicesData);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('registerModal');
+    if (event.target == modal) {
+        closeRegisterModal();
+    }
+}
+
+// Clean up interval when page is unloaded
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
+});
+
+// Pause auto-refresh when page is hidden, resume when visible
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopAutoRefresh();
+    } else {
+        startAutoRefresh();
+        // Immediately refresh when page becomes visible
+        scanUnregisteredDevices(false);
+    }
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+        </div>
+    </div>
+</body>
+</html>
+

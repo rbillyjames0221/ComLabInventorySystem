@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ComLab Inventory System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <!-- Logo/Header -->
+            <div class="login-header">
+                <div class="logo-container">
+                    <i class="fas fa-laptop-code"></i>
+                </div>
+                <h1>ComLab Inventory</h1>
+                <p>Sign in to your account</p>
+            </div>
+
+            <!-- Notification box -->
+            <div id="notify" class="notification" role="alert" aria-live="polite">
+                <div id="notify-message"></div>
+                <button id="notify-close" class="close-btn" aria-label="Close notification">&times;</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" action="/login" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <!-- Username Field -->
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i>
+                        <span>Username</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        autocomplete="username"
+                        required 
+                        aria-required="true"
+                        aria-describedby="username-error"
+                        placeholder="Enter your username"
+                    >
+                    <span id="username-error" class="error-message" role="alert"></span>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        <span>Password</span>
+                    </label>
+                    <div class="password-wrapper">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            autocomplete="current-password"
+                            required 
+                            aria-required="true"
+                            aria-describedby="password-error"
+                            placeholder="Enter your password"
+                        >
+                        <button 
+                            type="button" 
+                            id="togglePassword" 
+                            class="password-toggle"
+                            aria-label="Show password"
+                            tabindex="0"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <span id="password-error" class="error-message" role="alert"></span>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember_me" name="remember_me">
+                        <span>Remember me</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" aria-hidden="true">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+
+                <!-- Register Link -->
+                <div class="register-link">
+                    <p>Don't have an account? <a href="/register">Create Account</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Background decoration -->
+        <div class="bg-decoration">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+    <script>
+        // Handle Flask flash messages
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              document.addEventListener('DOMContentLoaded', function() {
+                if (window.showNotification) {
+                  showNotification({{ message|tojson }}, {{ category|tojson }});
+                }
+              });
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </script>
+</body>
+</html>

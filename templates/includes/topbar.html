@@ -1,0 +1,170 @@
+<!-- Top Bar with Menu Toggle and User Info -->
+<div class="top-bar">
+    <div class="top-bar-left">
+        <!-- Desktop Menu Toggle (hidden on mobile) -->
+        <button class="menu-toggle-btn menu-toggle-desktop" id="menuToggleBtn" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <!-- Mobile Menu Toggle (opens sidebar, visible only on mobile) -->
+        <button class="menu-toggle-btn menu-toggle-mobile" id="menuToggleMobileBtn" aria-label="Open sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        {% if current_page %}
+        <h2 class="page-title page-title-desktop">
+            {% if current_page == 'admin_dashboard' %}
+                <i class="fa fa-desktop"></i> Computer Laboratory Management
+            {% elif current_page == 'student_dashboard' %}
+                <i class="fa fa-user-circle"></i> User Dashboard
+            {% elif current_page == 'account_management' %}
+                <i class="fas fa-users-cog"></i> Account Management
+            {% elif current_page == 'unregistered_devices' %}
+                <i class="fas fa-exclamation-triangle"></i> Unregistered Devices
+            {% elif current_page == 'register_device' %}
+                <i class="fa fa-laptop"></i> Device Registration
+            {% elif current_page == 'comlab_view' %}
+                <i class="fas fa-home"></i> Devices in {{ lab_name|default('Lab') }}
+            {% elif current_page == 'inventory' %}
+                <i class="fa fa-briefcase"></i> Inventory Management – {{ lab_name|default('Computer Lab') }}
+            {% elif current_page == 'view_summary' %}
+                <i class="fas fa-chart-pie"></i> Reports Summary - Computer Lab {{ comlab_id|default('') }}
+            {% elif current_page == 'peripheral_summary' %}
+                <i class="fa fa-list-alt"></i> Peripheral Summary - Computer Lab {{ comlab_id|default('') }}
+            {% elif current_page == 'view_alerts' %}
+                <i class="fa-solid fa-triangle-exclamation"></i> Peripheral Alerts - Computer Lab {{ comlab_id|default('') }}
+            {% elif current_page == 'view_reports' %}
+                📋 Anomaly Reports - {{ lab_name|default('Lab') }}
+            {% elif current_page == 'usb_devices' %}
+                <i class="fas fa-file-alt"></i> ANOMALY LOGS REPORT FOR COMPUTER LAB {{ comlab_id|default('') }}
+            {% elif current_page == 'pending_accounts' %}
+                <i class="fas fa-users-cog"></i> Pending Accounts
+            {% else %}
+                <i class="fas fa-desktop"></i> Dashboard
+            {% endif %}
+        </h2>
+        {% endif %}
+    </div>
+    
+    <div class="top-bar-right">
+        <!-- Mobile View: Direct Icons (visible only on mobile) -->
+        <div class="top-bar-right-mobile">
+            {% if current_user and current_user.get('role') == 'admin' %}
+            <!-- Alerts Notification -->
+            <div class="alerts-wrapper" id="alertsWrapperMobile">
+                <button class="alerts-btn" id="alertsBtnMobile" aria-label="View alerts">
+                    <i class="fas fa-bell"></i>
+                    <span class="alerts-badge" id="alertsBadgeMobile" style="display: none;">0</span>
+                </button>
+            </div>
+            {% endif %}
+            
+            {% if current_user %}
+            <div class="user-info user-info-mobile">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">{{ current_user.get('username', 'User') }}</span>
+                    <span class="user-role">{{ current_user.get('role', 'user')|title }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Desktop View: Always Visible -->
+        <div class="top-bar-right-desktop">
+            {% if current_user and current_user.get('role') == 'admin' %}
+            <!-- Alerts Notification -->
+            <div class="alerts-wrapper" id="alertsWrapper">
+                <button class="alerts-btn" id="alertsBtn" aria-label="View alerts">
+                    <i class="fas fa-bell"></i>
+                    <span class="alerts-badge" id="alertsBadge" style="display: none;">0</span>
+                </button>
+                <div class="alerts-panel" id="alertsPanel">
+                    <div class="alerts-panel-header">
+                        <h3>Device Alerts</h3>
+                        <button class="alerts-close" onclick="closeAlertsPanel()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="alerts-list" id="alertsList">
+                        <div class="alerts-loading">Loading alerts...</div>
+                    </div>
+                    <div class="alerts-panel-footer">
+                        <a href="/admin" id="viewAllAlertsLink" class="view-all-alerts">View All Alerts</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if current_user %}
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">{{ current_user.get('username', 'User') }}</span>
+                    <span class="user-role">{{ current_user.get('role', 'user')|title }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="top-bar-actions">
+            {% block topbar_actions %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<!-- Mobile/Tablet Page Title (shown in content area) -->
+{% if current_page %}
+<div class="page-title-mobile">
+    {% if current_page == 'admin_dashboard' %}
+        <h1><i class="fa fa-desktop"></i> Computer Laboratory Management</h1>
+    {% elif current_page == 'student_dashboard' %}
+        <h1><i class="fa fa-user-circle"></i> User Dashboard</h1>
+    {% elif current_page == 'account_management' %}
+        <h1><i class="fas fa-users-cog"></i> Account Management</h1>
+    {% elif current_page == 'unregistered_devices' %}
+        <h1><i class="fas fa-exclamation-triangle"></i> Unregistered Devices</h1>
+    {% elif current_page == 'register_device' %}
+        <h1><i class="fa fa-laptop"></i> Device Registration</h1>
+    {% elif current_page == 'comlab_view' %}
+        <h1><i class="fas fa-home"></i> Devices in {{ lab_name|default('Lab') }}</h1>
+    {% elif current_page == 'inventory' %}
+        <h1><i class="fa fa-briefcase"></i> Inventory Management – {{ lab_name|default('Computer Lab') }}</h1>
+    {% elif current_page == 'view_summary' %}
+        <h1><i class="fas fa-chart-pie"></i> Reports Summary - Computer Lab {{ comlab_id|default('') }}</h1>
+    {% elif current_page == 'peripheral_summary' %}
+        <h1><i class="fa fa-list-alt"></i> Peripheral Summary - Computer Lab {{ comlab_id|default('') }}</h1>
+    {% elif current_page == 'view_alerts' %}
+        <h1><i class="fa-solid fa-triangle-exclamation"></i> Peripheral Alerts - Computer Lab {{ comlab_id|default('') }}</h1>
+    {% elif current_page == 'view_reports' %}
+        <h1>📋 Anomaly Reports - {{ lab_name|default('Lab') }}</h1>
+    {% elif current_page == 'usb_devices' %}
+        <h1><i class="fas fa-file-alt"></i> ANOMALY LOGS REPORT FOR COMPUTER LAB {{ comlab_id|default('') }}</h1>
+    {% elif current_page == 'pending_accounts' %}
+        <h1><i class="fas fa-users-cog"></i> Pending Accounts</h1>
+    {% else %}
+        <h1><i class="fas fa-desktop"></i> Dashboard</h1>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Alerts Panel for Mobile Menu -->
+{% if current_user and current_user.get('role') == 'admin' %}
+<div class="alerts-panel-mobile" id="alertsPanelMobile">
+    <div class="alerts-panel-header">
+        <h3>Device Alerts</h3>
+        <button class="alerts-close" onclick="closeAlertsPanelMobile()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="alerts-list" id="alertsListMobile">
+        <div class="alerts-loading">Loading alerts...</div>
+    </div>
+    <div class="alerts-panel-footer">
+        <a href="/admin" id="viewAllAlertsLinkMobile" class="view-all-alerts">View All Alerts</a>
+    </div>
+</div>
+{% endif %}
+

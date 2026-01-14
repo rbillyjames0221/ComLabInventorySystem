@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANOMALY REPORTS</title>
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f2f5;
+        color: #343a40;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Legacy top-bar styles removed - using topbar component */
+
+    /* Filtering card */
+    .filter-card {
+        border: none;
+        box-shadow: 0 0.35rem 0.75rem rgba(0,0,0,0.08);
+        border-radius: 0.65rem;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        background-color: #fff;
+    }
+
+    .form-control {
+        font-size: 16px;
+        padding: 10px 12px;
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        flex: 1 1 150px;
+        margin-bottom: 5px;
+    }
+
+    /* Table */
+    .table-card {
+        background-color: #fff;
+        border-radius: 0.65rem;
+        box-shadow: 0 0.35rem 0.75rem rgba(0,0,0,0.08);
+        padding: 15px 20px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    th {
+        background-color: #5bc0de;
+        color: white;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    td {
+        vertical-align: middle;
+    }
+
+    /* Status indicators */
+    .status-indicator {
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .connected { color: green; animation: fade 1s linear infinite; }
+    .disconnected { color: red; animation: fade 1s linear infinite; }
+    @keyframes fade { 50% { opacity: 0.5; } }
+    .event-text { user-select: none; color: #000; font-weight: 500; }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .filter-card { padding: 12px 15px; margin-bottom: 15px; }
+        .filter-row { flex-direction: column; gap: 12px; }
+        .filter-group { flex: 1 1 100%; margin-bottom: 0; }
+        .table-card { padding: 12px; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { min-width: 700px; font-size: 14px; }
+        th, td { padding: 8px 6px; font-size: 13px; }
+    }
+
+    @media (max-width: 480px) {
+        .filter-card { padding: 10px 12px; }
+        table { min-width: 600px; }
+        th, td { padding: 6px 4px; font-size: 12px; }
+    }
+
+    @media print {
+        .print-hide { display: none !important; }
+        body { background-color: #fff; }
+    }
+</style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'usb_devices' %}
+    {% set comlab_id = comlab_id %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <div class="container-responsive">
+            <!-- Top Bar -->
+            {% include 'includes/topbar.html' %}
+
+            <!-- Page Content -->
+            <div class="page-content">
+
+    <!-- Filtering Card -->
+<!-- Filtering Card -->
+<div class="filter-card print-hide">
+    <h5 class="mb-3">Filter Reports</h5>
+    <div class="filter-row">
+        <div class="filter-group">
+            <label for="pcTagFilter">PC Tag:</label>
+            <select class="form-control" id="pcTagFilter">
+                <option value="">All</option>
+                {% for pc_tag in pc_tags %}
+                    <option value="{{ pc_tag }}">{{ pc_tag }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="userIdSearch">User ID:</label>
+            <input type="text" class="form-control" id="userIdSearch" placeholder="Search User ID...">
+        </div>
+        <div class="filter-group">
+            <label for="deviceTypeFilter">Device Type:</label>
+            <select class="form-control" id="deviceTypeFilter">
+                <option value="">All</option>
+                {% for device_type in device_types %}
+                    <option value="{{ device_type }}">{{ device_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="eventTypeFilter">Event Type:</label>
+            <select class="form-control" id="eventTypeFilter">
+                <option value="">All</option>
+                <option value="connected">Connected</option>
+                <option value="unplugged">Unplugged</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="dateFilter">Date:</label>
+            <input type="date" class="form-control" id="dateFilter">
+        </div>
+        <div class="filter-group d-flex align-items-end">
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Print Button -->
+    <button class="btn btn-primary print-hide mb-3" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Report
+    </button>
+
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Device Unit</th>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Event Type</th>
+                        <th>Device Type</th>
+                        <th>Unique ID</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for device in devices %}
+                    <tr>
+                        <td>{{ device['device_name'] }}</td>
+                        <td>{{ device['user_id'] }}</td>
+                        <td>{{ device['username'] }}</td>
+                        <td>
+                            <span class="status-indicator {{ device['event_type'] }}">
+                                {% if device['event_type'] == 'connected' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </span>
+                            <span class="event-text">
+                                {{ 'unplugged' if device['event_type'] == 'disconnected' else device['event_type'] }}
+                            </span>
+                        </td>
+                        <td>{{ device['device_type'] }}</td>
+                        <td>{{ device['unique_id'] }}</td>
+                        <td>{{ device['timestamp'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    function filterTable() {
+        var pcTag = $('#pcTagFilter').val().toLowerCase();
+        var username = $('#usernameSearch').val().toLowerCase();
+        var deviceType = $('#deviceTypeFilter').val().toLowerCase();
+        var eventType = $('#eventTypeFilter').val().toLowerCase();
+        var date = $('#dateFilter').val();
+
+        $('#tableBody tr').each(function() {
+            var row = $(this);
+            var pcTagValue = row.find('td:nth-child(1)').text().toLowerCase();
+            var usernameValue = row.find('td:nth-child(3)').text().toLowerCase();
+            var deviceTypeValue = row.find('td:nth-child(6)').text().toLowerCase();
+            var eventTypeValue = row.find('td:nth-child(4)').text().trim().toLowerCase();
+            var timestampValue = row.find('td:nth-child(7)').text();
+
+            var matches = true;
+            if(pcTag && pcTagValue.indexOf(pcTag) === -1) matches = false;
+            if(username && usernameValue.indexOf(username) === -1) matches = false;
+            if(deviceType && deviceTypeValue.indexOf(deviceType) === -1) matches = false;
+            if(eventType && eventTypeValue.indexOf(eventType) === -1) matches = false;
+            if(date && timestampValue.indexOf(date) === -1) matches = false;
+
+            if(matches) row.show(); else row.hide();
+        });
+    }
+
+    $('#pcTagFilter, #usernameSearch, #deviceTypeFilter, #eventTypeFilter, #dateFilter').on('change keyup', filterTable);
+
+    window.clearFilters = function() {
+        $('#pcTagFilter, #usernameSearch, #deviceTypeFilter, #eventTypeFilter, #dateFilter').val('');
+        filterTable();
+    };
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

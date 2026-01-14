@@ -1,0 +1,3855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Peripheral Dashboard – {{ lab_name }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root {
+    --primary: #007bff;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --grey: #6c757d;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #edf1f7;
+    margin: 0;
+    padding: 0;
+}
+
+/* Legacy top-bar styles removed - using topbar component */
+
+/* PC Card Grid Layout - Beautiful Design */
+.pc-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+@media (min-width: 576px) {
+    .pc-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .pc-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .pc-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+.pc-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 20px;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 220px;
+    border: 1px solid #e9ecef;
+}
+
+.pc-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border-color: var(--primary);
+}
+
+.pc-card-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 12px;
+    display: block;
+    object-fit: contain;
+    opacity: 0.85;
+    transition: transform 0.3s ease;
+}
+
+.pc-card:hover .pc-card-icon {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.pc-card-name {
+    margin: 0 0 14px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #212529;
+    text-align: center;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+    word-break: break-word;
+}
+
+.pc-card-info {
+    margin: 12px 0 16px 0;
+    font-size: 12px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.pc-card-student {
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+    word-break: break-word;
+}
+
+.pc-card-student.clickable {
+    cursor: pointer;
+    color: var(--primary);
+    transition: all 0.2s ease;
+}
+
+.pc-card-student.clickable:hover {
+    background: #e7f1ff;
+    color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.pc-card-student i {
+    color: #6c757d;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.pc-card-student.clickable i {
+    color: var(--primary);
+}
+
+.pc-card-student .not-assigned {
+    color: #adb5bd;
+    font-style: italic;
+    font-size: 11px;
+}
+
+.pc-card-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    white-space: nowrap;
+}
+
+.pc-card-status-badge.status-used {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border: 1px solid #b8dacc;
+}
+
+.pc-card-status-badge.status-available {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: 1px solid #f1b0b7;
+}
+
+.pc-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    width: 100%;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecef;
+}
+
+.pc-card-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,123,255,0.3);
+}
+
+.pc-card-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+}
+
+.pc-card-delete-btn {
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+}
+
+.pc-card-delete-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+}
+
+/* PC Content Modal/Expanded View */
+.pc-content-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.pc-content-modal.active {
+    display: flex;
+}
+
+.pc-content-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 95%;
+    width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.pc-content-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pc-content-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.pc-content-wrapper::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.pc-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.pc-card-count {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0056b3 100%);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(0,123,255,0.4);
+    border: 2px solid white;
+    z-index: 10;
+}
+
+.pc-card-stats {
+    font-size: 10px;
+    color: #6c757d;
+    margin-top: 4px;
+    text-align: center;
+}
+
+/* Search Bar */
+/* Action Bar Container */
+.action-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 20px;
+}
+
+.add-device-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+    width: fit-content;
+    align-self: flex-start;
+}
+
+.add-device-btn:hover {
+    background: #218838;
+}
+
+.add-device-btn:active {
+    transform: scale(0.98);
+}
+
+.search-bar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+    min-width: 300px;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 15px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px 10px 48px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: 0.2s;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* View Toggle Buttons */
+.view-toggle {
+    display: flex;
+    gap: 10px;
+}
+
+.view-toggle-btn {
+    padding: 8px 16px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: #6c757d;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.view-toggle-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.view-toggle-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.view-toggle-btn.active:hover {
+    background: #0056b3;
+    color: white;
+}
+
+/* Compact List View */
+.pc-list-view {
+    display: none;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.pc-list-view.active {
+    display: block;
+}
+
+.pc-list-item {
+    display: grid;
+    grid-template-columns: 60px 1fr 140px 180px 140px 200px;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: 0.2s;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .pc-list-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px 15px;
+    }
+    
+    .pc-list-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto;
+    }
+    
+    .pc-list-name {
+        text-align: center;
+        font-size: 18px;
+    }
+    
+    .pc-list-count,
+    .pc-list-status,
+    .pc-list-student,
+    .pc-list-action {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .pc-list-action {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .pc-list-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.pc-list-item:last-child {
+    border-bottom: none;
+}
+
+.pc-list-item:hover {
+    background: #f8f9fa;
+}
+
+.pc-list-icon {
+    width: 45px;
+    height: 45px;
+    opacity: 0.75;
+    transition: transform 0.2s ease;
+}
+
+.pc-list-item:hover .pc-list-icon {
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.pc-list-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: #212529;
+    letter-spacing: 0.2px;
+}
+
+.pc-list-count {
+    text-align: left;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.pc-list-status {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.pc-list-status .status-pill {
+    font-size: 10px;
+    padding: 3px 8px;
+}
+
+.pc-list-student {
+    font-size: 14px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.pc-list-student.clickable {
+    cursor: pointer;
+    color: var(--primary);
+    transition: all 0.2s ease;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.pc-list-student.clickable:hover {
+    background: #e7f1ff;
+    color: #0056b3;
+}
+
+.pc-list-student i {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.pc-list-student.clickable i {
+    color: var(--primary);
+}
+
+.pc-list-student .not-assigned {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+.pc-list-action {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+}
+
+.pc-list-action-btn {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(0,123,255,0.3);
+    white-space: nowrap;
+}
+
+.pc-list-action-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+}
+
+.pc-list-delete-btn {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+    white-space: nowrap;
+}
+
+.pc-list-delete-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+}
+
+.status-used {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-available {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.pc-grid-view.active {
+    display: grid;
+}
+
+.pc-grid-view {
+    display: none;
+}
+
+.pc-grid-view.active {
+    display: grid;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 25px;
+    padding: 20px 0;
+}
+
+.pagination-btn {
+    padding: 8px 14px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+    transition: 0.2s;
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f8f9fa;
+}
+
+.pagination-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 0 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .action-bar-container {
+        padding: 0 15px;
+        gap: 12px;
+    }
+    
+    .add-device-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .search-bar-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .search-input-wrapper {
+        max-width: 100%;
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .search-input {
+        padding: 12px 12px 12px 50px;
+        font-size: 16px; /* Larger for mobile to prevent zoom */
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .search-input-wrapper i {
+        left: 16px;
+        font-size: 16px;
+    }
+    
+    .view-toggle {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .view-toggle-btn {
+        flex: 1;
+        min-height: 44px;
+        font-size: 14px;
+    }
+    
+    .pc-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .pc-card {
+        padding: 16px 12px;
+        min-height: 200px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .pc-card-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .pc-card-name {
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .pc-card-info {
+        margin: 8px 0 10px 0;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .pc-card-student {
+        font-size: 11px;
+        padding: 6px 8px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .pc-card-status-badge {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+    
+    .pc-card-actions {
+        gap: 6px;
+        padding-top: 12px;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .pc-card-btn {
+        font-size: 13px;
+        padding: 10px 12px;
+        min-height: 44px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pc-card-delete-btn {
+        font-size: 13px;
+        padding: 10px 12px;
+        min-height: 44px;
+        width: 100%;
+    }
+    
+    .pc-list-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 15px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .pc-list-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto;
+    }
+    
+    .pc-list-name {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .pc-list-count,
+    .pc-list-status,
+    .pc-list-student {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .pc-list-status {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pc-list-action {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pc-list-action-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+    
+    .pc-content-wrapper {
+        padding: 20px 15px;
+        max-width: 100%;
+        width: 100%;
+        border-radius: 12px;
+        max-height: 95vh;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 35px;
+    }
+}
+
+.pc-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.pc-content-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pc-content-close {
+    background: #f0f0f0;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.pc-content-close:hover {
+    background: #e0e0e0;
+    transform: rotate(90deg);
+}
+
+.add-btn {
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+    margin-bottom:15px;
+}
+.add-btn:hover { background:#0056b3; transform:translateY(-2px); }
+
+.add-form {
+    display:none;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:20px;
+    background:#f8f9fa;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+.add-form select, .add-form input {
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+.add-form button {
+    background:var(--success);
+    color:#fff;
+    border:none;
+    padding:8px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.2s;
+}
+.add-form button:hover { background:#218838; transform:translateY(-1px); }
+
+/* Status pills */
+.status-pill {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:4px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:bold;
+    text-transform:capitalize;
+    color:white;
+}
+.status-connected { background:#28a745; }
+.status-registered { background:#28a745; }
+.status-unplugged { background:#dc3545; }
+.status-faulty { background:#ffc107; color:#000; }
+.status-missing { background:#6c757d; }
+.status-replaced { background:#FF4000; }
+
+/* Table */
+.peripherals-table { width:100%; border-collapse:collapse; }
+.peripherals-table th, .peripherals-table td {
+    padding:12px 15px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+}
+.peripherals-table th { background:var(--primary); color:white; }
+.vendor-id-cell, .product-id-cell {
+    font-family: monospace;
+    font-size: 12px;
+    color: #495057;
+    background-color: #f8f9fa;
+    padding: 8px 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.action-buttons button {
+    margin-right:6px;
+    padding:4px 8px;
+    border-radius:6px;
+    border:none;
+    cursor:pointer;
+}
+.edit-btn { background:#ffc107; color:#fff; }
+.save-btn { background:#28a745; color:#fff; display:none; }
+.cancel-btn { background:#6c757d; color:#fff; display:none; }
+.remove-btn { background:var(--danger); color:#fff; }
+
+.edit-btn:hover, .save-btn:hover, .cancel-btn:hover, .remove-btn:hover { opacity:0.85; }
+
+input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid #ccc; }
+.remarks-input { width:100%; padding:6px 8px; border-radius:4px; border:1px solid #ccc; font-size:13px; }
+.remarks-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(0,123,255,0.25); }
+.remarks-display { padding:6px 8px; font-size:13px; color:#333; min-height:20px; }
+.remarks-edit-btn { background:#007bff; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:5px; }
+.remarks-edit-btn:hover { background:#0056b3; }
+
+/* Fade-in effect */
+.fade-in { animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Barcode Scanner Styles */
+.scanner-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 10px auto;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.scanner-message {
+    text-align: center;
+    padding: 10px;
+    background: #f8f9fa;
+    color: #333;
+    font-size: 14px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.scan-btn {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scan-btn:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+.stop-scan-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stop-scan-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.detect-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detect-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.detect-btn.detecting {
+    background: #ffc107;
+    color: #000;
+}
+
+.detect-btn.detecting:hover {
+    background: #e0a800;
+}
+
+.detect-status {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    font-size: 14px;
+    display: none;
+}
+
+.detect-status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.detect-status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.detect-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Device Detection Modal */
+.detect-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.detect-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.detect-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    max-width: 95%;
+    width: 95%;
+    max-height: 90vh;
+    position: relative;
+    animation: slideDown 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detect-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.detect-modal-header h3 {
+    margin: 0;
+    color: #007bff;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.close-modal:hover {
+    background: #f8f9fa;
+    color: #dc3545;
+}
+
+.waiting-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.waiting-spinner {
+    font-size: 48px;
+    color: #007bff;
+    margin-bottom: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.waiting-state p {
+    font-size: 16px;
+    color: #495057;
+    margin: 10px 0;
+}
+
+.device-data-state {
+    display: none;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
+}
+
+.device-data-state.active {
+    display: block;
+}
+
+/* Custom scrollbar for device data state */
+.device-data-state::-webkit-scrollbar {
+    width: 8px;
+}
+
+.device-data-state::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.device-data-state::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.device-data-state::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.device-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.device-info-item {
+    margin-bottom: 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+/* Full width items for certain fields */
+.device-info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.device-info-item label {
+    display: block;
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.device-info-item .value {
+    color: #007bff;
+    font-size: 16px;
+    word-break: break-word;
+}
+
+.device-info-item input,
+.device-info-item select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #495057;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.device-info-item input:focus,
+.device-info-item select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.device-info-item .readonly-value {
+    color: #6c757d;
+    font-size: 14px;
+    padding: 8px 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    padding-top: 15px;
+    border-top: 2px solid #e9ecef;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-btn-cancel:hover {
+    background: #5a6268;
+}
+
+.modal-btn-add {
+    background: #28a745;
+    color: white;
+}
+
+.modal-btn-add:hover {
+    background: #218838;
+}
+
+.modal-status-message {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    display: none;
+}
+
+.modal-status-message.show {
+    display: block;
+}
+
+.modal-status-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.modal-status-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.modal-status-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Device list styles - applied dynamically via inline styles */
+.devices-list-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.devices-list-content {
+    max-height: 250px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.devices-list-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.devices-list-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.devices-list-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+    .detect-modal-content {
+        max-width: 98%;
+        width: 98%;
+        padding: 20px;
+    }
+    
+    .device-fields-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .detect-modal-content {
+        max-width: 100%;
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        padding: 15px;
+    }
+    
+    .device-fields-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .device-info-item {
+        padding: 10px;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .modal-actions .modal-btn {
+        width: 100%;
+    }
+}
+
+/* Remarks Modal Styles */
+.remarks-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.remarks-modal-overlay.active {
+    display: flex;
+}
+
+.remarks-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    text-align: left;
+    position: relative;
+    animation: slideDown 0.3s ease;
+}
+
+.remarks-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.remarks-modal-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.remarks-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.remarks-modal-close:hover {
+    background: #f0f0f0;
+    color: #dc3545;
+}
+
+.remarks-modal-body {
+    margin-bottom: 20px;
+}
+
+.remarks-modal-body label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.remarks-modal-body textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 14px;
+    font-family: 'Segoe UI', sans-serif;
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+}
+
+.remarks-modal-body textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.remarks-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 2px solid #e9ecef;
+}
+
+.remarks-modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remarks-modal-btn:hover {
+    transform: scale(1.05);
+}
+
+.remarks-modal-btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.remarks-modal-btn-cancel:hover {
+    background: #5a6268;
+}
+
+.remarks-modal-btn-save {
+    background: var(--primary);
+    color: white;
+}
+
+.remarks-modal-btn-save:hover {
+    background: #0056b3;
+}
+
+@media (max-width: 480px) {
+    .action-bar-container {
+        padding: 0 8px;
+        gap: 10px;
+    }
+    
+    .add-device-btn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .search-input {
+        padding: 12px 10px 12px 48px;
+        font-size: 16px;
+    }
+    
+    .search-input-wrapper i {
+        left: 15px;
+        font-size: 15px;
+    }
+    
+    .view-toggle-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .pc-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 10px 8px;
+    }
+    
+    .pc-card {
+        padding: 14px 10px;
+        min-height: 180px;
+    }
+    
+    .pc-card-icon {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .pc-card-name {
+        font-size: 16px;
+    }
+    
+    .pc-card-student {
+        font-size: 12px;
+    }
+    
+    .pc-card-btn,
+    .pc-card-delete-btn {
+        font-size: 12px;
+        padding: 9px 10px;
+    }
+    
+    .pc-list-item {
+        padding: 12px 10px;
+    }
+    
+    .pc-list-name {
+        font-size: 16px;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'inventory' %}
+    {% set comlab_id = comlab_id %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Top Bar -->
+        {% include 'includes/topbar.html' %}
+        {% block topbar_actions %}{% endblock %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+{% if devices %}
+<!-- Add Device Button and Search Bar Container -->
+<div class="action-bar-container">
+    <button onclick="openAddDeviceModal()" class="add-device-btn">
+        <i class="fas fa-plus"></i> <span class="hide-mobile">Add Device</span>
+    </button>
+    
+    <!-- Search Bar and View Toggle -->
+    <div class="search-bar-container">
+    <div class="search-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="pc-search-input" class="search-input" placeholder="Search by PC name..." autocomplete="off">
+    </div>
+    <div class="view-toggle">
+        <button class="view-toggle-btn active" id="grid-view-btn" onclick="switchView('grid')">
+            <i class="fas fa-th"></i> Grid View
+        </button>
+        <button class="view-toggle-btn" id="list-view-btn" onclick="switchView('list')">
+            <i class="fas fa-list"></i> List View
+        </button>
+    </div>
+    </div>
+</div>
+
+<!-- Grid View -->
+<div class="pc-grid-view active" id="grid-view">
+    <div class="pc-grid">
+    {% for pc in devices %}
+        <div class="pc-card" onclick="openPCContent('{{ pc.tag }}')">
+            {% if pc.peripherals|length > 0 %}
+            <span class="pc-card-count">{{ pc.peripherals|length }}</span>
+            {% endif %}
+            <img src="https://its.lmu.edu/media/its/computer%20lab%20icon-400x400.png" alt="PC Icon" class="pc-card-icon">
+            <p class="pc-card-name">{{ pc.tag }}</p>
+            <div class="pc-card-info">
+                <div class="pc-card-student {% if pc.student_name %}clickable{% endif %}" {% if pc.student_name %}onclick="event.stopPropagation(); viewStudentProfile('{{ pc.student_name }}')" title="Click to view profile"{% endif %}>
+                    <i class="fas fa-user"></i> 
+                    {% if pc.student_name %}
+                    <span>Assigned to {{ pc.student_name }}</span>
+                    {% else %}
+                    <span class="not-assigned">Not assigned</span>
+                    {% endif %}
+                </div>
+                <div class="pc-card-status-badge {% if pc.status == 'In Use' %}status-used{% else %}status-available{% endif %}">
+                    {% if pc.status == 'In Use' %}
+                    <i class="fas fa-check-circle"></i> In Use
+                    {% else %}
+                    <i class="fas fa-circle"></i> Available
+                    {% endif %}
+                </div>
+            </div>
+            <div class="pc-card-actions">
+                <button class="pc-card-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
+                    Manage <i class="fa fa-arrow-right"></i>
+                </button>
+                <button class="pc-card-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+
+<!-- List View -->
+<div class="pc-list-view" id="list-view">
+    {% for pc in devices %}
+    <div class="pc-list-item" onclick="openPCContent('{{ pc.tag }}')">
+        <img src="https://its.lmu.edu/media/its/computer%20lab%20icon-400x400.png" alt="PC Icon" class="pc-list-icon">
+        <div class="pc-list-name">{{ pc.tag }}</div>
+        <div class="pc-list-count">
+            {% if pc.peripherals|length > 0 %}
+            <strong>{{ pc.peripherals|length }}</strong> peripheral{{ 's' if pc.peripherals|length != 1 else '' }}
+            {% else %}
+            <span style="color: #adb5bd;">No peripherals</span>
+            {% endif %}
+        </div>
+        <div class="pc-list-student {% if pc.student_name %}clickable{% endif %}" {% if pc.student_name %}onclick="event.stopPropagation(); viewStudentProfile('{{ pc.student_name }}')" title="Click to view profile"{% endif %}>
+            <i class="fas fa-user"></i> 
+            {% if pc.student_name %}
+            <span>Assigned to {{ pc.student_name }}</span>
+            {% else %}
+            <span class="not-assigned">Not assigned</span>
+            {% endif %}
+        </div>
+        <div class="pc-list-status" data-pc-tag="{{ pc.tag }}">
+            {% if pc.status == 'In Use' %}
+            <span class="status-pill status-used"><i class="fas fa-check-circle"></i> In Use</span>
+            {% else %}
+            <span class="status-pill status-available"><i class="fas fa-circle"></i> Available</span>
+            {% endif %}
+        </div>
+        <div class="pc-list-action">
+            <button class="pc-list-action-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
+                Manage <i class="fa fa-arrow-right"></i>
+            </button>
+            <button class="pc-list-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination (shared for both views) -->
+<div class="pagination" id="pagination-container"></div>
+
+<!-- Student Profile Modal -->
+<div id="studentProfileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2001; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; position: relative; max-height: 90vh; overflow-y: auto;">
+        <button onclick="closeStudentProfileModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6c757d;">&times;</button>
+        <h2 style="margin-top: 0; color: var(--primary);"><i class="fas fa-user-circle"></i> Student Profile</h2>
+        <div id="studentProfileContent">
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p>Loading profile...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<!-- Add Device Modal -->
+<div id="addDeviceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; position: relative;">
+        <button onclick="closeAddDeviceModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6c757d;">&times;</button>
+        <h2 style="margin-top: 0;"><i class="fas fa-link"></i> Device Registration Link</h2>
+        <p>Copy and open this link on the device you want to register:</p>
+        <input type="text" id="deviceLink" readonly style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; margin: 15px 0; box-sizing: border-box;">
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="copyLink()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-copy"></i> Copy Link
+            </button>
+            <button onclick="openLinkInNewTab()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-external-link-alt"></i> Open
+            </button>
+            <button onclick="closeAddDeviceModal()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-check"></i> Done
+            </button>
+        </div>
+    </div>
+</div>
+
+{% for pc in devices %}
+<!-- PC Content Modal -->
+<div class="pc-content-modal" id="modal-{{ pc.tag }}">
+    <div class="pc-content-wrapper">
+        <div class="pc-content-header">
+            <h2><i class="fas fa-desktop"></i> {{ pc.tag }} - Peripheral Management</h2>
+            <button class="pc-content-close" onclick="closePCContent('{{ pc.tag }}')">&times;</button>
+        </div>
+        
+        <div class="pc-content-body" id="content-{{ pc.tag }}">
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+            <button class="add-btn" onclick="openAddPeripheralModal('{{ pc.tag }}')"><i class="fa fa-plus"></i> Add Peripheral Manually</button>
+            <button type="button" class="scan-btn" onclick="startBarcodeScanner('{{ pc.tag }}')" id="scan-btn-{{ pc.tag }}">
+                <i class="fas fa-qrcode"></i> Scan Barcode
+            </button>
+            <button type="button" class="stop-scan-btn" onclick="stopBarcodeScanner('{{ pc.tag }}')" id="stop-scan-{{ pc.tag }}" style="display: none;">
+                <i class="fas fa-stop"></i> Stop Scanning
+            </button>
+            <button type="button" class="detect-btn" onclick="toggleDeviceDetection('{{ pc.tag }}')" id="detect-btn-{{ pc.tag }}">
+                <i class="fas fa-plug"></i> Detect New Plugged Device
+            </button>
+        </div>
+        <div id="detect-status-{{ pc.tag }}" class="detect-status"></div>
+        <div id="scanner-container-{{ pc.tag }}" class="scanner-container" style="display: none;"></div>
+        
+        <!-- Add Peripheral Manually Modal -->
+        <div id="add-peripheral-modal-{{ pc.tag }}" class="detect-modal">
+            <div class="detect-modal-content">
+                <div class="detect-modal-header">
+                    <h3><i class="fas fa-plus-circle"></i> Add Peripheral Manually</h3>
+                    <button class="close-modal" onclick="closeAddPeripheralModal('{{ pc.tag }}')">&times;</button>
+                </div>
+                
+                <div class="device-data-state active" style="display: block;">
+                    <div class="device-fields-grid">
+                        <div class="device-info-item">
+                            <label>Device Type: <span style="color: #dc3545;">*</span></label>
+                            <select id="manual-device-type-{{ pc.tag }}" required>
+                                <option value="">Select Device Type</option>
+                                <option value="Mouse">Mouse</option>
+                                <option value="Keyboard">Keyboard</option>
+                                <option value="Headphones">Headphones</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Printer">Printer</option>
+                                <option value="Scanner">Scanner</option>
+                                <option value="Webcam">Webcam</option>
+                                <option value="FlashDrive">FlashDrive</option>
+                            </select>
+                        </div>
+                        
+                        <div class="device-info-item">
+                            <label>Brand / Model Name: <span style="color: #dc3545;">*</span></label>
+                            <input type="text" id="manual-device-name-{{ pc.tag }}" placeholder="Enter brand/model name" required>
+                        </div>
+                        
+                        <div class="device-info-item">
+                            <label>Serial Number: <span style="color: #dc3545;">*</span></label>
+                            <input type="text" id="manual-device-serial-{{ pc.tag }}" placeholder="Enter serial number" required>
+                        </div>
+                        
+                        <div class="device-info-item">
+                            <label>Unique ID:</label>
+                            <input type="text" id="manual-device-unique-id-{{ pc.tag }}" placeholder="Enter unique ID (optional)">
+                        </div>
+                        
+                        <div class="device-info-item">
+                            <label>Vendor ID:</label>
+                            <input type="text" id="manual-device-vendor-{{ pc.tag }}" placeholder="Enter vendor ID (e.g., 046D)" style="font-family: monospace;">
+                        </div>
+                        
+                        <div class="device-info-item">
+                            <label>Product ID:</label>
+                            <input type="text" id="manual-device-product-{{ pc.tag }}" placeholder="Enter product ID (e.g., C547)" style="font-family: monospace;">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn-cancel" onclick="closeAddPeripheralModal('{{ pc.tag }}')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="modal-btn modal-btn-add" onclick="addPeripheralToPC('{{ pc.tag }}')">
+                            <i class="fas fa-check"></i> Add Device
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Device Detection Modal -->
+            <div id="detect-modal-{{ pc.tag }}" class="detect-modal">
+                <div class="detect-modal-content">
+                    <div class="detect-modal-header">
+                        <h3><i class="fas fa-plug"></i> Device Detection</h3>
+                        <button class="close-modal" onclick="closeDetectModal('{{ pc.tag }}')">&times;</button>
+                    </div>
+                    
+                    <div id="waiting-state-{{ pc.tag }}" class="waiting-state">
+                        <div class="waiting-spinner">
+                            <i class="fas fa-plug fa-spin" style="font-size: 48px; color: #007bff;"></i>
+                        </div>
+                        <p><strong>Waiting for new device...</strong></p>
+                        <p style="font-size: 14px; color: #6c757d;">Plug in a USB device now</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                            <button type="button" class="modal-btn" style="background: #17a2b8;" onclick="refreshDeviceDetection('{{ pc.tag }}')">
+                                <i class="fas fa-sync-alt"></i> Refresh Detection
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="device-data-state-{{ pc.tag }}" class="device-data-state">
+                        <div id="modal-status-{{ pc.tag }}" class="modal-status-message"></div>
+                        
+                        <div class="device-fields-grid">
+                            <div class="device-info-item">
+                                <label>Device Type: <span style="color: #6c757d; font-weight: normal;">(Auto-detected)</span></label>
+                                <select id="modal-device-type-{{ pc.tag }}">
+                                    <option value="">Select Device Type</option>
+                                    <option value="Mouse">Mouse</option>
+                                    <option value="Keyboard">Keyboard</option>
+                                    <option value="Headphones">Headphones</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Printer">Printer</option>
+                                    <option value="Scanner">Scanner</option>
+                                    <option value="Webcam">Webcam</option>
+                                    <option value="FlashDrive">FlashDrive</option>
+                                </select>
+                            </div>
+                            
+                            <div class="device-info-item">
+                                <label>Brand / Model Name: <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="modal-device-name-{{ pc.tag }}" placeholder="Enter brand/model name" required>
+                            </div>
+                            
+                            <div class="device-info-item">
+                                <label>Serial Number: <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="modal-device-serial-{{ pc.tag }}" placeholder="Enter serial number" required>
+                            </div>
+                            
+                            <div class="device-info-item">
+                                <label>Unique ID: <span style="color: #6c757d; font-weight: normal;">(Auto-generated)</span></label>
+                                <div class="readonly-value" id="modal-device-unique-id-{{ pc.tag }}">-</div>
+                            </div>
+                            
+                            <div class="device-info-item">
+                                <label>Vendor ID: <span style="color: #6c757d; font-weight: normal;">(Auto-detected)</span></label>
+                                <input type="text" id="modal-device-vendor-{{ pc.tag }}" placeholder="Vendor ID" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
+                            </div>
+                            
+                            <div class="device-info-item">
+                                <label>Product ID: <span style="color: #6c757d; font-weight: normal;">(Auto-detected)</span></label>
+                                <input type="text" id="modal-device-product-{{ pc.tag }}" placeholder="Product ID" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn-cancel" onclick="closeDetectModal('{{ pc.tag }}')">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button class="modal-btn modal-btn-add" onclick="addDetectedDevice('{{ pc.tag }}')">
+                                <i class="fas fa-check"></i> Add Device
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <span class="status-pill status-connected">Connected</span>
+            <span class="status-pill status-unplugged">Unplugged</span>
+            <span class="status-pill status-faulty">Faulty</span>
+            <span class="status-pill status-missing">Missing</span>
+            <span class="status-pill status-replaced">Replaced</span>
+        </div>
+
+        <table class="peripherals-table" id="table-{{ pc.tag }}">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Brand</th>
+                    <th>Serial Number</th>
+                    <th>Unique ID</th>
+                    <th>Vendor ID</th>
+                    <th>Product ID</th>
+                    <th>Device State</th>
+                    <th>Action</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pc.peripherals %}
+                <tr id="peripheral-{{ p.id }}">
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.brand }}</td>
+                    <td>{{ p.serial_number }}</td>
+                    <td>{{ p.unique_id }}</td>
+                    <td class="vendor-id-cell">{{ p.vendor_id or '—' }}</td>
+                    <td class="product-id-cell">{{ p.product_id or '—' }}</td>
+                    <td><span class="status-pill status-{{ p.status }}">{{ p.status }}</span></td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" onclick="enableEdit('{{ p.id }}')">Edit</button>
+                        <button class="save-btn" onclick="saveEdit('{{ p.id }}')">Save</button>
+                        <button class="cancel-btn" onclick="cancelEdit('{{ p.id }}')">Cancel</button>
+                        <button class="remove-btn" onclick="deletePeripheral('{{ p.id }}')">Remove</button>
+                    </td>
+                    <td>
+                        <span class="remarks-display" id="remarks-display-{{ p.id }}">{{ p.remarks or 'No remarks' }}</span>
+                        <button class="remarks-edit-btn" data-peripheral-id="{{ p.id }}" onclick="openRemarksModalFromButton(this)">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div style="padding: 20px; text-align: center;">
+    <p>No devices found in this lab. Please register devices first.</p>
+</div>
+{% endif %}
+
+<!-- Remarks Edit Modal -->
+<div id="remarksModal" class="remarks-modal-overlay">
+    <div class="remarks-modal-content">
+        <div class="remarks-modal-header">
+            <h3><i class="fas fa-comment-alt"></i> Edit Remarks</h3>
+            <button class="remarks-modal-close" onclick="closeRemarksModal()">&times;</button>
+        </div>
+        <div class="remarks-modal-body">
+            <label for="remarksTextarea">Remarks:</label>
+            <textarea id="remarksTextarea" placeholder="Enter remarks..."></textarea>
+        </div>
+        <div class="remarks-modal-actions">
+            <button class="remarks-modal-btn remarks-modal-btn-cancel" onclick="closeRemarksModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="remarks-modal-btn remarks-modal-btn-save" onclick="saveRemarks()">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Open PC Content Modal
+function openPCContent(pcTag) {
+    const modal = document.getElementById(`modal-${pcTag}`);
+    if (modal) {
+        modal.classList.add('active');
+        // Start status monitoring for this PC if not already started
+        const labId = {{ comlab_id }};
+        if (!statusCheckIntervals[pcTag]) {
+            startStatusMonitoring(pcTag, labId);
+        }
+    }
+}
+
+// Close PC Content Modal
+function closePCContent(pcTag) {
+    const modal = document.getElementById(`modal-${pcTag}`);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Close modal when clicking outside (on the overlay, not the content)
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('pc-content-modal')) {
+        const modal = event.target;
+        const pcTag = modal.id.replace('modal-', '');
+        closePCContent(pcTag);
+    }
+});
+
+// Prevent modal from closing when clicking inside the content wrapper
+document.addEventListener('click', function(event) {
+    if (event.target.closest('.pc-content-wrapper')) {
+        event.stopPropagation();
+    }
+});
+// Open Add Peripheral Modal
+function openAddPeripheralModal(pcTag) {
+    const modal = document.getElementById(`add-peripheral-modal-${pcTag}`);
+    if (modal) {
+        modal.classList.add('active');
+        // Clear form fields
+        document.getElementById(`manual-device-type-${pcTag}`).value = '';
+        document.getElementById(`manual-device-name-${pcTag}`).value = '';
+        document.getElementById(`manual-device-serial-${pcTag}`).value = '';
+        document.getElementById(`manual-device-unique-id-${pcTag}`).value = '';
+        document.getElementById(`manual-device-vendor-${pcTag}`).value = '';
+        document.getElementById(`manual-device-product-${pcTag}`).value = '';
+    }
+}
+
+// Close Add Peripheral Modal
+function closeAddPeripheralModal(pcTag) {
+    const modal = document.getElementById(`add-peripheral-modal-${pcTag}`);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Add peripheral
+function addPeripheralToPC(pcTag){
+    // Get values from modal fields
+    const type = document.getElementById(`manual-device-type-${pcTag}`)?.value || '';
+    const brand = document.getElementById(`manual-device-name-${pcTag}`)?.value.trim() || '';
+    const serial = document.getElementById(`manual-device-serial-${pcTag}`)?.value.trim() || '';
+    const unique_id = document.getElementById(`manual-device-unique-id-${pcTag}`)?.value.trim() || '';
+    const vendor_id = document.getElementById(`manual-device-vendor-${pcTag}`)?.value.trim() || '';
+    const product_id = document.getElementById(`manual-device-product-${pcTag}`)?.value.trim() || '';
+
+    // Validate required fields
+    if(!type){
+        alert("Please select a device type");
+        document.getElementById(`manual-device-type-${pcTag}`).focus();
+        return;
+    }
+    
+    if(!brand){
+        alert("Please enter a brand/model name");
+        document.getElementById(`manual-device-name-${pcTag}`).focus();
+        return;
+    }
+    
+    if(!serial){
+        alert("Please enter a serial number");
+        document.getElementById(`manual-device-serial-${pcTag}`).focus();
+        return;
+    }
+
+    fetch(`/comlab/{{ comlab_id }}/add_peripheral`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ 
+            pc_tag: pcTag, 
+            name: type, 
+            brand: brand, 
+            unique_id: unique_id || '', 
+            serial_number: serial, 
+            vendor: vendor_id || '',
+            product: product_id || '',
+            remarks: ''
+        })
+    }).then(r=>r.json())
+      .then(resp=>{
+        if(resp.success){
+            const p = resp.peripheral;
+            const table = document.getElementById("table-"+pcTag).getElementsByTagName('tbody')[0];
+            const row = table.insertRow();
+            row.id = "peripheral-"+p.id;
+            row.classList.add("fade-in");
+            row.innerHTML = `
+                <td>${p.name}</td>
+                <td>${p.brand}</td>
+                <td>${p.serial_number || ''}</td>
+                <td>${p.unique_id || ''}</td>
+                <td class="vendor-id-cell">${p.vendor_id || '—'}</td>
+                <td class="product-id-cell">${p.product_id || '—'}</td>
+                <td><span class="status-pill status-${p.status}">${p.status}</span></td>
+                <td class="action-buttons">
+                    <button class="edit-btn" onclick="enableEdit('${p.id}')">Edit</button>
+                    <button class="save-btn" onclick="saveEdit('${p.id}')">Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('${p.id}')">Cancel</button>
+                    <button class="remove-btn" onclick="deletePeripheral('${p.id}')">Remove</button>
+                </td>
+                <td>
+                    <span class="remarks-display" id="remarks-display-${p.id}">${p.remarks || 'No remarks'}</span>
+                    <button class="remarks-edit-btn" data-peripheral-id="${p.id}" onclick="openRemarksModalFromButton(this)">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </td>
+            `;
+            
+            // Clear modal form fields
+            document.getElementById(`manual-device-type-${pcTag}`).value = "";
+            document.getElementById(`manual-device-name-${pcTag}`).value = "";
+            document.getElementById(`manual-device-serial-${pcTag}`).value = "";
+            document.getElementById(`manual-device-unique-id-${pcTag}`).value = "";
+            document.getElementById(`manual-device-vendor-${pcTag}`).value = "";
+            document.getElementById(`manual-device-product-${pcTag}`).value = "";
+            
+            // Close modal
+            closeAddPeripheralModal(pcTag);
+            
+            // Show success message
+            alert("Peripheral added successfully!");
+        } else {
+            alert(resp.message || "Failed to add peripheral");
+        }
+    }).catch(err=>{
+        console.error(err);
+        alert("An error occurred while adding the peripheral");
+    });
+}
+
+// Inline edit
+function enableEdit(id){
+    const row = document.getElementById("peripheral-"+id);
+    const cells = row.cells;
+    // Get remarks from display element (now at index 8 after adding vendor/product columns)
+    const remarksDisplay = cells[8].querySelector('.remarks-display');
+    const remarksValue = remarksDisplay ? remarksDisplay.textContent : '';
+    
+    row.dataset.original = JSON.stringify({
+        type: cells[0].innerText,
+        brand: cells[1].innerText,
+        serial: cells[2].innerText,  // Serial Number is in column 2 (index 2)
+        unique_id: cells[3].innerText,  // Unique ID is in column 3 (index 3)
+        vendor_id: cells[4].innerText,  // Vendor ID is in column 4 (index 4)
+        product_id: cells[5].innerText,  // Product ID is in column 5 (index 5)
+        remarks: remarksValue
+    });
+
+    cells[0].innerHTML = `<input class="inline-edit" value="${cells[0].innerText}">`;
+    cells[1].innerHTML = `<input class="inline-edit" value="${cells[1].innerText}">`;
+    cells[2].innerHTML = `<input class="inline-edit" value="${cells[2].innerText}">`;  // Serial Number
+    cells[3].innerHTML = `<input class="inline-edit" value="${cells[3].innerText}">`;  // Unique ID
+    // Vendor ID and Product ID are read-only (display only), don't make them editable
+    // cells[4] = Vendor ID (read-only)
+    // cells[5] = Product ID (read-only)
+    // cells[6] = Device State (read-only)
+    // cells[7] = Action buttons (read-only)
+    // cells[8] = Remarks (handled separately)
+
+    row.querySelector(".edit-btn").style.display="none";
+    row.querySelector(".save-btn").style.display="inline-block";
+    row.querySelector(".cancel-btn").style.display="inline-block";
+}
+
+function cancelEdit(id){
+    const row = document.getElementById("peripheral-"+id);
+    const orig = JSON.parse(row.dataset.original);
+    row.cells[0].innerText = orig.type;
+    row.cells[1].innerText = orig.brand;
+    row.cells[2].innerText = orig.serial;  // Serial Number
+    row.cells[3].innerText = orig.unique_id;  // Unique ID
+    // Vendor ID and Product ID remain unchanged (read-only)
+    // Restore remarks display value (now at index 8)
+    const remarksDisplay = row.cells[8].querySelector('.remarks-display');
+    if (remarksDisplay) remarksDisplay.textContent = orig.remarks || 'No remarks';
+
+    row.querySelector(".edit-btn").style.display="inline-block";
+    row.querySelector(".save-btn").style.display="none";
+    row.querySelector(".cancel-btn").style.display="none";
+}
+
+function saveEdit(id){
+    const row = document.getElementById("peripheral-"+id);
+    const inputs = row.querySelectorAll("input.inline-edit");
+    const type = inputs[0].value;
+    const brand = inputs[1].value;
+    const serial = inputs[2].value;  // Serial Number is input index 2
+    const unique_id = inputs[3].value;  // Unique ID is input index 3
+    // Get remarks from display element
+    const remarksDisplay = row.querySelector('.remarks-display');
+    const remarks = remarksDisplay ? remarksDisplay.textContent : '';
+
+    fetch('/api/edit_peripheral',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id, name:type, brand, unique_id, serial_number: serial, remarks})
+    }).then(r=>r.json())
+      .then(resp=>{
+        if(resp.success){
+            row.cells[0].innerText = type;
+            row.cells[1].innerText = brand;
+            row.cells[2].innerText = serial;  // Serial Number
+            row.cells[3].innerText = unique_id;  // Unique ID
+            // Remarks display is updated separately via the modal
+
+            row.querySelector(".edit-btn").style.display="inline-block";
+            row.querySelector(".save-btn").style.display="none";
+            row.querySelector(".cancel-btn").style.display="none";
+        } else alert("Failed to save");
+    }).catch(err=>console.error(err));
+}
+
+// Delete
+function deletePeripheral(id){
+    if(!confirm("Remove peripheral?")) return;
+    fetch('/api/delete_peripheral',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id})
+    }).then(r=>r.json())
+      .then(resp=>{
+        if(resp.success){
+            const row = document.getElementById("peripheral-"+id);
+            if(row) row.remove();
+        } else alert("Failed to delete");
+    }).catch(err=>console.error(err));
+}
+
+// Remarks Modal Variables
+let currentRemarksPeripheralId = null;
+
+// Open remarks edit modal from button (uses data attributes)
+function openRemarksModalFromButton(button) {
+    const peripheralId = button.getAttribute('data-peripheral-id');
+    
+    // Get current remarks from the display element
+    const remarksDisplay = document.getElementById(`remarks-display-${peripheralId}`);
+    const currentRemarks = remarksDisplay ? remarksDisplay.textContent : '';
+    
+    // Handle "No remarks" text
+    const actualRemarks = currentRemarks === 'No remarks' ? '' : currentRemarks;
+    
+    openRemarksModal(peripheralId, actualRemarks);
+}
+
+// Open remarks edit modal
+function openRemarksModal(peripheralId, currentRemarks) {
+    currentRemarksPeripheralId = peripheralId;
+    const modal = document.getElementById('remarksModal');
+    const textarea = document.getElementById('remarksTextarea');
+    
+    // Set current remarks value
+    textarea.value = currentRemarks || '';
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Focus textarea
+    setTimeout(() => {
+        textarea.focus();
+    }, 100);
+}
+
+// Close remarks modal
+function closeRemarksModal() {
+    const modal = document.getElementById('remarksModal');
+    modal.classList.remove('active');
+    currentRemarksPeripheralId = null;
+    
+    // Clear textarea
+    document.getElementById('remarksTextarea').value = '';
+}
+
+// Save remarks
+function saveRemarks() {
+    if (!currentRemarksPeripheralId) {
+        alert('Error: No peripheral selected');
+        return;
+    }
+    
+    const textarea = document.getElementById('remarksTextarea');
+    const remarks = textarea.value.trim();
+    
+    // Update via API
+    fetch('/api/edit_peripheral', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            id: currentRemarksPeripheralId,
+            name: '', // Not updating name
+            brand: '', // Not updating brand
+            unique_id: '', // Not updating unique_id
+            serial_number: '', // Not updating serial_number
+            remarks: remarks
+        })
+    }).then(r => r.json())
+      .then(resp => {
+          if (resp.success) {
+              // Update display
+              const displayElement = document.getElementById(`remarks-display-${currentRemarksPeripheralId}`);
+              if (displayElement) {
+                  displayElement.textContent = remarks || 'No remarks';
+              }
+              
+              // Close modal
+              closeRemarksModal();
+              
+              // Show success message
+              alert('Remarks saved successfully!');
+          } else {
+              alert('Failed to save remarks. Please try again.');
+          }
+      })
+      .catch(err => {
+          console.error('Error updating remarks:', err);
+          alert('Error saving remarks. Please try again.');
+      });
+}
+
+// Close modal when clicking outside
+document.getElementById('remarksModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRemarksModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        // Close PC content modals first (top level)
+        const pcModals = document.querySelectorAll('[id^="modal-"]');
+        for (let modal of pcModals) {
+            if (modal.classList.contains('active') && modal.classList.contains('pc-content-modal')) {
+                const pcTag = modal.id.replace('modal-', '');
+                closePCContent(pcTag);
+                return;
+            }
+        }
+        
+        // Close remarks modal
+        const remarksModal = document.getElementById('remarksModal');
+        if (remarksModal && remarksModal.classList.contains('active')) {
+            closeRemarksModal();
+            return;
+        }
+        
+        // Close add peripheral modals
+        const addModals = document.querySelectorAll('[id^="add-peripheral-modal-"]');
+        for (let modal of addModals) {
+            if (modal.classList.contains('active')) {
+                const pcTag = modal.id.replace('add-peripheral-modal-', '');
+                closeAddPeripheralModal(pcTag);
+                return;
+            }
+        }
+        
+        // Close device detection modals
+        const detectModals = document.querySelectorAll('[id^="detect-modal-"]');
+        for (let modal of detectModals) {
+            if (modal.classList.contains('active')) {
+                const pcTag = modal.id.replace('detect-modal-', '');
+                closeDetectModal(pcTag);
+                return;
+            }
+        }
+    }
+});
+
+// Barcode Scanner Variables
+let html5QrcodeScanner = {};
+
+// Start barcode scanner
+async function startBarcodeScanner(pcTag) {
+    const containerId = `scanner-container-${pcTag}`;
+    const container = document.getElementById(containerId);
+    const stopBtn = document.getElementById(`stop-scan-${pcTag}`);
+    const scanBtn = document.getElementById(`scan-btn-${pcTag}`);
+    
+    // Show scanner container
+    container.style.display = 'block';
+    stopBtn.style.display = 'inline-block';
+    scanBtn.style.display = 'none';
+    
+    try {
+        // Initialize scanner
+        html5QrcodeScanner[pcTag] = new Html5Qrcode(containerId);
+        
+        // Start scanning
+        await html5QrcodeScanner[pcTag].start(
+            { facingMode: "environment" }, // Use back camera on mobile
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+            },
+            (decodedText, decodedResult) => {
+                // Success callback - barcode scanned!
+                handleBarcodeScanned(pcTag, decodedText);
+            },
+            (errorMessage) => {
+                // Error callback - ignore for continuous scanning
+            }
+        );
+    } catch (err) {
+        console.error("Error starting scanner:", err);
+        alert("Could not access camera. Please ensure camera permissions are granted.");
+        container.style.display = 'none';
+        stopBtn.style.display = 'none';
+        scanBtn.style.display = 'inline-block';
+    }
+}
+
+// Stop barcode scanner
+function stopBarcodeScanner(pcTag) {
+    const containerId = `scanner-container-${pcTag}`;
+    const container = document.getElementById(containerId);
+    const stopBtn = document.getElementById(`stop-scan-${pcTag}`);
+    const scanBtn = document.getElementById(`scan-btn-${pcTag}`);
+    
+    if (html5QrcodeScanner[pcTag]) {
+        html5QrcodeScanner[pcTag].stop().then(() => {
+            html5QrcodeScanner[pcTag].clear();
+            container.style.display = 'none';
+            stopBtn.style.display = 'none';
+            scanBtn.style.display = 'inline-block';
+        }).catch(err => {
+            console.error("Error stopping scanner:", err);
+            container.style.display = 'none';
+            stopBtn.style.display = 'none';
+            scanBtn.style.display = 'inline-block';
+        });
+    } else {
+        container.style.display = 'none';
+        stopBtn.style.display = 'none';
+        scanBtn.style.display = 'inline-block';
+    }
+}
+
+// Handle scanned barcode data
+function handleBarcodeScanned(pcTag, barcodeData) {
+    // Stop scanning after successful scan
+    stopBarcodeScanner(pcTag);
+    
+    // Open the add peripheral modal if not already open
+    openAddPeripheralModal(pcTag);
+    
+    // Parse barcode data
+    // Option 1: If barcode contains structured data (e.g., JSON or delimited)
+    try {
+        // Try parsing as JSON first
+        const parsed = JSON.parse(barcodeData);
+        if (parsed.brand) document.getElementById(`manual-device-name-${pcTag}`).value = parsed.brand;
+        if (parsed.serial) document.getElementById(`manual-device-serial-${pcTag}`).value = parsed.serial;
+        if (parsed.unique_id) document.getElementById(`manual-device-unique-id-${pcTag}`).value = parsed.unique_id;
+        if (parsed.vendor) document.getElementById(`manual-device-vendor-${pcTag}`).value = parsed.vendor;
+        if (parsed.product) document.getElementById(`manual-device-product-${pcTag}`).value = parsed.product;
+        if (parsed.type) {
+            const typeSelect = document.getElementById(`manual-device-type-${pcTag}`);
+            typeSelect.value = parsed.type;
+        }
+        alert(`Barcode scanned successfully!\n\nData populated from barcode.`);
+        return;
+    } catch (e) {
+        // Not JSON, continue with other parsing methods
+    }
+    
+    // Option 2: If barcode is delimited (e.g., "BRAND|SERIAL|UNIQUE_ID|VENDOR|PRODUCT")
+    if (barcodeData.includes('|')) {
+        const parts = barcodeData.split('|');
+        if (parts.length >= 1 && parts[0].trim()) document.getElementById(`manual-device-name-${pcTag}`).value = parts[0].trim();
+        if (parts.length >= 2 && parts[1].trim()) document.getElementById(`manual-device-serial-${pcTag}`).value = parts[1].trim();
+        if (parts.length >= 3 && parts[2].trim()) document.getElementById(`manual-device-unique-id-${pcTag}`).value = parts[2].trim();
+        if (parts.length >= 4 && parts[3].trim()) document.getElementById(`manual-device-vendor-${pcTag}`).value = parts[3].trim();
+        if (parts.length >= 5 && parts[4].trim()) document.getElementById(`manual-device-product-${pcTag}`).value = parts[4].trim();
+        alert(`Barcode scanned successfully!\n\nData populated from barcode.`);
+        return;
+    }
+    
+    // Option 3: Default - treat entire barcode as serial number
+    document.getElementById(`manual-device-serial-${pcTag}`).value = barcodeData;
+    
+    // Show success message
+    alert(`Barcode scanned: ${barcodeData}\n\nSerial number populated. Please fill in remaining fields manually.`);
+}
+
+// Device Detection Variables
+let deviceDetectionIntervals = {};
+let previousDeviceKeys = {};
+let detectedDevices = {}; // Store detected device data per PC
+
+// Get initial device list for a PC
+async function getInitialDevices(pcTag) {
+    try {
+        // Get devices multiple times to ensure we have a stable baseline
+        // This helps catch devices that might be in the process of connecting
+        const response1 = await fetch('/api/detect_devices');
+        const data1 = await response1.json();
+        
+        // Wait a bit and get again to ensure consistency
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const response2 = await fetch('/api/detect_devices');
+        const data2 = await response2.json();
+        
+        // Use the union of both device lists as baseline to be safe
+        let baselineKeys = new Set();
+        if (data1.success && data1.devices) {
+            data1.devices.forEach(d => baselineKeys.add(d.device_key));
+        }
+        if (data2.success && data2.devices) {
+            data2.devices.forEach(d => baselineKeys.add(d.device_key));
+        }
+        
+        previousDeviceKeys[pcTag] = baselineKeys;
+        console.log(`Baseline captured: ${baselineKeys.size} devices`);
+        return baselineKeys;
+    } catch (error) {
+        console.error('Error getting initial devices:', error);
+        previousDeviceKeys[pcTag] = new Set();
+        return new Set();
+    }
+}
+
+// Toggle device detection - opens modal
+async function toggleDeviceDetection(pcTag) {
+    openDetectModal(pcTag);
+}
+
+// Open detection modal - detect NEW devices only
+async function openDetectModal(pcTag) {
+    const modal = document.getElementById(`detect-modal-${pcTag}`);
+    const waitingState = document.getElementById(`waiting-state-${pcTag}`);
+    const dataState = document.getElementById(`device-data-state-${pcTag}`);
+    
+    // Reset modal state
+    modal.classList.add('active');
+    waitingState.style.display = 'block';
+    dataState.classList.remove('active');
+    dataState.style.display = 'none';
+    
+    // Clear any previous detected device
+    detectedDevices[pcTag] = null;
+    
+    // Hide status message
+    const statusMsg = document.getElementById(`modal-status-${pcTag}`);
+    statusMsg.classList.remove('show');
+    
+    // Capture baseline of currently connected devices
+    showModalStatus(pcTag, 'info', 'Capturing baseline... Please wait.');
+    const baselineKeys = await getInitialDevices(pcTag);
+    
+    // Start detecting for NEW devices
+    showModalStatus(pcTag, 'info', 'Baseline captured. Plug in a new device now...');
+    deviceDetectionIntervals[pcTag] = setInterval(() => checkForNewDevice(pcTag), 500);
+}
+
+// Refresh device detection - recapture baseline and check immediately
+async function refreshDeviceDetection(pcTag) {
+    showModalStatus(pcTag, 'info', 'Refreshing detection... Please wait.');
+    
+    // Recapture baseline
+    await getInitialDevices(pcTag);
+    
+    // Check immediately for new devices
+    await checkForNewDevice(pcTag);
+    
+    // If no device found, continue polling
+    if (!detectedDevices[pcTag] && !deviceDetectionIntervals[pcTag]) {
+        deviceDetectionIntervals[pcTag] = setInterval(() => checkForNewDevice(pcTag), 500);
+        showModalStatus(pcTag, 'info', 'Baseline refreshed. Detection is active. Plug in a device or wait...');
+    }
+}
+
+// Show all currently connected devices - simplified version
+async function showAllCurrentDevices(pcTag) {
+    const devicesContent = document.getElementById(`devices-list-content-${pcTag}`);
+    
+    try {
+        const response = await fetch('/api/detect_devices');
+        const data = await response.json();
+        
+        if (data.success && data.devices && data.devices.length > 0) {
+            devicesContent.innerHTML = '';
+            
+            data.devices.forEach((device, index) => {
+                const deviceDiv = document.createElement('div');
+                deviceDiv.style.cssText = 'padding: 12px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; cursor: pointer; transition: all 0.2s;';
+                deviceDiv.onmouseover = function() { 
+                    this.style.background = '#e9ecef'; 
+                    this.style.transform = 'translateX(5px)';
+                };
+                deviceDiv.onmouseout = function() { 
+                    this.style.background = '#f8f9fa'; 
+                    this.style.transform = 'translateX(0)';
+                };
+                deviceDiv.onclick = function() { selectDeviceFromList(pcTag, device); };
+                
+                const typeIcon = getDeviceIcon(device.type);
+                deviceDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="${typeIcon}" style="font-size: 24px; color: #007bff;"></i>
+                        <div style="flex: 1;">
+                            <strong style="font-size: 16px;">${device.type || 'Unknown Device'}</strong><br>
+                            <small style="color: #6c757d;">${device.name || 'No name available'}</small><br>
+                            ${device.manufacturer ? `<small style="color: #6c757d;">Manufacturer: ${device.manufacturer}</small><br>` : ''}
+                            <small style="color: #6c757d;">VID: ${device.vendor || 'N/A'}, PID: ${device.product || 'N/A'}</small>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: #6c757d;"></i>
+                    </div>
+                `;
+                
+                devicesContent.appendChild(deviceDiv);
+            });
+            
+            showModalStatus(pcTag, 'success', `Found ${data.devices.length} device(s). Click on a device to auto-fill the form.`);
+        } else {
+            devicesContent.innerHTML = '<div style="text-align: center; padding: 30px; color: #6c757d;"><i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 10px;"></i><p>No devices detected.</p><p style="font-size: 14px;">Make sure devices are plugged in and try again.</p></div>';
+            showModalStatus(pcTag, 'info', 'No devices found. Make sure devices are plugged in.');
+        }
+    } catch (error) {
+        console.error('Error loading devices:', error);
+        showModalStatus(pcTag, 'error', 'Error loading devices. Check console for details.');
+        devicesContent.innerHTML = '<div style="text-align: center; padding: 30px; color: #dc3545;"><i class="fas fa-times-circle" style="font-size: 48px; margin-bottom: 10px;"></i><p>Error loading devices.</p><p style="font-size: 14px;">Please try again.</p></div>';
+    }
+}
+
+// Get icon for device type
+function getDeviceIcon(deviceType) {
+    const iconMap = {
+        'Keyboard': 'fas fa-keyboard',
+        'Mouse': 'fas fa-mouse',
+        'Flash Drive': 'fas fa-usb',
+        'Printer': 'fas fa-print',
+        'Camera / Scanner': 'fas fa-camera',
+        'Audio Device': 'fas fa-headphones',
+        'Monitor': 'fas fa-desktop',
+        'Webcam': 'fas fa-video'
+    };
+    return iconMap[deviceType] || 'fas fa-plug';
+}
+
+// Refresh device detection - recapture baseline
+async function refreshDeviceDetection(pcTag) {
+    showModalStatus(pcTag, 'info', 'Refreshing baseline... Please wait.');
+    
+    // Stop current detection
+    if (deviceDetectionIntervals[pcTag]) {
+        clearInterval(deviceDetectionIntervals[pcTag]);
+        delete deviceDetectionIntervals[pcTag];
+    }
+    
+    // Recapture baseline
+    await getInitialDevices(pcTag);
+    
+    // Restart detection
+    showModalStatus(pcTag, 'info', 'Baseline refreshed. Plug in a new device now...');
+    deviceDetectionIntervals[pcTag] = setInterval(() => checkForNewDevice(pcTag), 500);
+}
+
+// Close detection modal - simplified
+function closeDetectModal(pcTag) {
+    const modal = document.getElementById(`detect-modal-${pcTag}`);
+    const waitingState = document.getElementById(`waiting-state-${pcTag}`);
+    const dataState = document.getElementById(`device-data-state-${pcTag}`);
+    
+    modal.classList.remove('active');
+    
+    // Reset modal state
+    waitingState.style.display = 'block';
+    dataState.style.display = 'none';
+    dataState.classList.remove('active');
+    
+    // Clear detected device
+    detectedDevices[pcTag] = null;
+    
+    // Clear any intervals (if they exist)
+    if (deviceDetectionIntervals[pcTag]) {
+        clearInterval(deviceDetectionIntervals[pcTag]);
+        delete deviceDetectionIntervals[pcTag];
+    }
+}
+
+// Check for new device - detects ONLY newly plugged devices
+async function checkForNewDevice(pcTag) {
+    try {
+        // Ensure we have a baseline
+        if (!previousDeviceKeys[pcTag] || previousDeviceKeys[pcTag].size === undefined) {
+            await getInitialDevices(pcTag);
+            return;
+        }
+        
+        const response = await fetch('/api/detect_new_device', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                previous_device_keys: Array.from(previousDeviceKeys[pcTag] || [])
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.has_new_device && data.new_devices && data.new_devices.length > 0) {
+            // NEW device detected!
+            const newDevice = data.new_devices[0];
+            
+            // Stop polling
+            if (deviceDetectionIntervals[pcTag]) {
+                clearInterval(deviceDetectionIntervals[pcTag]);
+                delete deviceDetectionIntervals[pcTag];
+            }
+            
+            // Update baseline to include the new device
+            if (data.current_device_keys) {
+                previousDeviceKeys[pcTag] = new Set(data.current_device_keys);
+            }
+            
+            // Store and show the new device in modal for editing
+            detectedDevices[pcTag] = newDevice;
+            showDeviceDataInModal(pcTag, newDevice);
+            
+            showModalStatus(pcTag, 'success', 'New device detected! Review and edit the information, then click "Add Device" to add it to the table.');
+        }
+    } catch (error) {
+        console.error('Error checking for new device:', error);
+    }
+}
+
+// Show detected device data in modal
+function showDeviceDataInModal(pcTag, device) {
+    const waitingState = document.getElementById(`waiting-state-${pcTag}`);
+    const dataState = document.getElementById(`device-data-state-${pcTag}`);
+    
+    // Hide waiting state, show data state
+    waitingState.style.display = 'none';
+    dataState.classList.add('active');
+    dataState.style.display = 'block';
+    
+    // Map device type to form options
+    const typeMap = {
+        'Keyboard': 'Keyboard',
+        'Mouse': 'Mouse',
+        'Flash Drive': 'FlashDrive',
+        'Printer': 'Printer',
+        'Camera / Scanner': 'Scanner',
+        'Audio Device': 'Headphones'
+    };
+    
+    // Populate editable fields
+    const typeSelect = document.getElementById(`modal-device-type-${pcTag}`);
+    const mappedType = typeMap[device.type] || device.type;
+    if (typeSelect) {
+        for (let option of typeSelect.options) {
+            if (option.value.toLowerCase() === mappedType.toLowerCase()) {
+                typeSelect.value = option.value;
+                break;
+            }
+        }
+    }
+    
+    // Brand/Model Name (editable, auto-filled with device name)
+    const nameInput = document.getElementById(`modal-device-name-${pcTag}`);
+    if (nameInput) {
+        // Extract brand/model from device name (remove common prefixes)
+        let deviceName = device.name || '';
+        // Remove "HID-compliant", "USB", etc. prefixes
+        deviceName = deviceName.replace(/^(HID-compliant|USB)\s*/i, '').trim();
+        nameInput.value = deviceName || device.name || '';
+    }
+    
+    // Serial Number (editable, auto-filled - improved logic)
+    const serialInput = document.getElementById(`modal-device-serial-${pcTag}`);
+    if (serialInput) {
+        let serialNumber = '';
+        
+        // Priority 1: Extract from unique_id (remove VID_PID_INST prefix if present)
+        if (device.unique_id && device.unique_id !== '-') {
+            // If unique_id contains VID_PID_INST format, try to extract instance part
+            const instMatch = device.unique_id.match(/INST[_\s]*([^\s]+)/i);
+            if (instMatch && instMatch[1] && instMatch[1].length > 4) {
+                serialNumber = instMatch[1].replace(/[&_]/g, '').substring(0, 20); // Clean and limit length
+            } else {
+                // Use the unique_id as-is, but clean it up
+                serialNumber = device.unique_id.replace(/VID_[^_]*_PID_[^_]*_INST[_\s]*/i, '').trim();
+                if (!serialNumber || serialNumber.length < 3) {
+                    serialNumber = device.unique_id; // Fallback to full unique_id
+                }
+            }
+        }
+        
+        // Priority 2: Use VID_PID format if no good serial found
+        if (!serialNumber || serialNumber.length < 3) {
+            if (device.vendor && device.vendor !== 'UNKNOWN' && device.product && device.product !== 'UNKNOWN') {
+                serialNumber = `${device.vendor}-${device.product}`;
+            }
+        }
+        
+        // Priority 3: Extract from device name (look for numbers/patterns)
+        if (!serialNumber || serialNumber.length < 3) {
+            const nameMatch = (device.name || '').match(/([A-Z0-9]{4,})/);
+            if (nameMatch) {
+                serialNumber = nameMatch[1];
+            }
+        }
+        
+        // Priority 4: Use device name as last resort
+        if (!serialNumber) {
+            serialNumber = (device.name || '').substring(0, 30);
+        }
+        
+        serialInput.value = serialNumber;
+    }
+    
+    // Read-only fields (display only)
+    document.getElementById(`modal-device-unique-id-${pcTag}`).textContent = device.unique_id || '-';
+    
+    // Vendor ID and Product ID (auto-filled, read-only)
+    const vendorInput = document.getElementById(`modal-device-vendor-${pcTag}`);
+    const productInput = document.getElementById(`modal-device-product-${pcTag}`);
+    if (vendorInput) {
+        vendorInput.value = device.vendor || '';
+    }
+    if (productInput) {
+        productInput.value = device.product || '';
+    }
+    
+    // Show success message
+    showModalStatus(pcTag, 'success', 'Device detected! Review and edit the information, then click "Add Device" to add it to the table.');
+}
+
+// Show status message in modal
+function showModalStatus(pcTag, type, message) {
+    const statusEl = document.getElementById(`modal-status-${pcTag}`);
+    if (statusEl) {
+        statusEl.className = `modal-status-message ${type} show`;
+        statusEl.textContent = message;
+    }
+}
+
+// Add detected device directly to table (called automatically when device is detected)
+async function addDetectedDeviceDirectly(pcTag, device) {
+    try {
+        // Map device type to form options
+        const typeMap = {
+            'Keyboard': 'Keyboard',
+            'Mouse': 'Mouse',
+            'Flash Drive': 'FlashDrive',
+            'Printer': 'Printer',
+            'Camera / Scanner': 'Scanner',
+            'Audio Device': 'Headphones'
+        };
+        
+        const deviceType = typeMap[device.type] || device.type || 'Mouse';
+        
+        // Extract brand/model from device name
+        let deviceName = device.name || '';
+        deviceName = deviceName.replace(/^(HID-compliant|USB)\s*/i, '').trim();
+        const brandModel = deviceName || device.name || deviceType;
+        
+        // Extract serial number from unique_id
+        // Example: VID_046D_PID_C547_INST_6_3474EE3_0_2 -> extract "63474EE302"
+        // The serial is typically the alphanumeric part after INST, with underscores removed
+        let serialNumber = '';
+        if (device.unique_id && device.unique_id !== '-') {
+            // Match INST followed by numbers/letters (the instance identifier)
+            // Format: INST_6_3474EE3_0_2 -> extract "63474EE302"
+            const instMatch = device.unique_id.match(/INST[_\s]+([^\s]+)/i);
+            if (instMatch && instMatch[1]) {
+                const instPart = instMatch[1]; // e.g., "6_3474EE3_0_2"
+                // Remove all underscores and spaces to get serial: "63474EE302"
+                serialNumber = instPart.replace(/[_\s]/g, '');
+            }
+            
+            // If extraction failed, try alternative methods
+            if (!serialNumber || serialNumber.length < 4) {
+                // Try to find a meaningful alphanumeric sequence
+                const parts = device.unique_id.split('_');
+                // Look for parts that look like serial numbers (6+ alphanumeric chars)
+                for (let part of parts) {
+                    if (part && /^[A-Z0-9]{6,}$/i.test(part) && part !== 'INST' && !part.startsWith('VID') && !part.startsWith('PID')) {
+                        serialNumber = part;
+                        break;
+                    }
+                }
+            }
+            
+            // Final fallback
+            if (!serialNumber || serialNumber.length < 4) {
+                if (device.vendor && device.vendor !== 'UNKNOWN' && device.product && device.product !== 'UNKNOWN') {
+                    serialNumber = `${device.vendor}${device.product}`;
+                } else {
+                    // Use last part of unique_id as fallback
+                    const parts = device.unique_id.split('_');
+                    serialNumber = parts[parts.length - 1] || device.unique_id.substring(device.unique_id.length - 12);
+                }
+            }
+        }
+        
+        // Keep the full unique_id as-is (VID_PID_INST format)
+        const uniqueId = device.unique_id || '';
+        
+        // Add device directly via API
+        const comlabId = {{ comlab_id }};
+        const response = await fetch(`/comlab/${comlabId}/add_peripheral`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                pc_tag: pcTag,
+                name: deviceType,
+                brand: brandModel,
+                unique_id: uniqueId,
+                serial_number: serialNumber,
+                vendor: device.vendor || '',
+                product: device.product || '',
+                remarks: ''
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Add row to table
+            const p = result.peripheral;
+            const table = document.getElementById(`table-${pcTag}`).getElementsByTagName('tbody')[0];
+            const row = table.insertRow();
+            row.id = `peripheral-${p.id}`;
+            row.classList.add('fade-in');
+            row.innerHTML = `
+                <td>${p.name}</td>
+                <td>${p.brand}</td>
+                <td>${p.serial_number || ''}</td>
+                <td>${p.unique_id || ''}</td>
+                <td class="vendor-id-cell">${p.vendor_id || '—'}</td>
+                <td class="product-id-cell">${p.product_id || '—'}</td>
+                <td><span class="status-pill status-${p.status}">${p.status}</span></td>
+                <td class="action-buttons">
+                    <button class="edit-btn" onclick="enableEdit('${p.id}')">Edit</button>
+                    <button class="save-btn" onclick="saveEdit('${p.id}')">Save</button>
+                    <button class="cancel-btn" onclick="cancelEdit('${p.id}')">Cancel</button>
+                    <button class="remove-btn" onclick="deletePeripheral('${p.id}')">Remove</button>
+                </td>
+                <td>
+                    <span class="remarks-display" id="remarks-display-${p.id}">${p.remarks || 'No remarks'}</span>
+                    <button class="remarks-edit-btn" data-peripheral-id="${p.id}" onclick="openRemarksModalFromButton(this)">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </td>
+            `;
+            
+            // Show success message and close modal
+            showModalStatus(pcTag, 'success', `Device "${brandModel}" added successfully!`);
+            setTimeout(() => {
+                closeDetectModal(pcTag);
+            }, 1500);
+        } else {
+            showModalStatus(pcTag, 'error', result.message || 'Failed to add device. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error adding detected device:', error);
+        showModalStatus(pcTag, 'error', 'Error adding device. Please try again.');
+    }
+}
+
+// Add detected device to form and close modal (manual add from modal)
+function addDetectedDevice(pcTag) {
+    // Get values from editable modal fields
+    const typeSelect = document.getElementById(`modal-device-type-${pcTag}`);
+    const nameInput = document.getElementById(`modal-device-name-${pcTag}`);
+    const serialInput = document.getElementById(`modal-device-serial-${pcTag}`);
+    
+    // Validate required fields
+    if (!typeSelect || !typeSelect.value) {
+        showModalStatus(pcTag, 'error', 'Please select a device type.');
+        return;
+    }
+    
+    if (!nameInput || !nameInput.value.trim()) {
+        showModalStatus(pcTag, 'error', 'Please enter a brand/model name.');
+        nameInput.focus();
+        return;
+    }
+    
+    if (!serialInput || !serialInput.value.trim()) {
+        showModalStatus(pcTag, 'error', 'Please enter a serial number.');
+        serialInput.focus();
+        return;
+    }
+    
+    // Get all field values from modal
+    const deviceType = typeSelect.value;
+    const brandModel = nameInput.value.trim();
+    const serialNumber = serialInput.value.trim();
+    const uniqueId = document.getElementById(`modal-device-unique-id-${pcTag}`)?.textContent.trim() || '';
+    const vendorId = document.getElementById(`modal-device-vendor-${pcTag}`)?.value.trim() || '';
+    const productId = document.getElementById(`modal-device-product-${pcTag}`)?.value.trim() || '';
+    
+    // Add device directly to table (not to manual form fields)
+    addDetectedDeviceDirectly(pcTag, {
+        type: deviceType,
+        name: brandModel,
+        unique_id: uniqueId,
+        vendor: vendorId,
+        product: productId,
+        serial_number: serialNumber
+    });
+    
+    // Close modal
+    closeDetectModal(pcTag);
+    
+    // Show success message
+    showDetectStatus(pcTag, 'success', 'Device data populated! Review and click "Add" to register the peripheral.');
+}
+
+// Show detection status message (outside modal)
+function showDetectStatus(pcTag, type, message) {
+    const statusEl = document.getElementById(`detect-status-${pcTag}`);
+    if (statusEl) {
+        statusEl.className = `detect-status ${type}`;
+        statusEl.textContent = message;
+        statusEl.style.display = 'block';
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+}
+
+// Clean up detection when form is closed
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    // Close device detection modal
+    if (event.target.classList.contains('detect-modal')) {
+        const modal = event.target;
+        if (modal.id.startsWith('detect-modal-')) {
+            const pcTag = modal.id.replace('detect-modal-', '');
+            closeDetectModal(pcTag);
+        }
+    }
+    
+    // Close add peripheral modal
+    if (event.target.classList.contains('detect-modal')) {
+        const modal = event.target;
+        if (modal.id.startsWith('add-peripheral-modal-')) {
+            const pcTag = modal.id.replace('add-peripheral-modal-', '');
+            closeAddPeripheralModal(pcTag);
+        }
+    }
+});
+
+// Device Status Monitoring - Check for disconnected devices
+let statusCheckIntervals = {};
+
+function startStatusMonitoring(pcTag, labId) {
+    // Check every 3 seconds for disconnected devices
+    if (statusCheckIntervals[pcTag]) {
+        clearInterval(statusCheckIntervals[pcTag]);
+    }
+    
+    // Initial refresh immediately
+    refreshPeripheralStatuses(pcTag, labId);
+    
+    let refreshCounter = 0;
+    // Check for disconnected devices every 3 seconds
+    statusCheckIntervals[pcTag] = setInterval(() => {
+        checkDisconnectedDevices(pcTag, labId);
+        refreshCounter++;
+        // Refresh all statuses every 10 seconds (every 3rd interval)
+        if (refreshCounter >= 3) {
+            refreshPeripheralStatuses(pcTag, labId);
+            refreshCounter = 0;
+        }
+    }, 3000);
+}
+
+function stopStatusMonitoring(pcTag) {
+    if (statusCheckIntervals[pcTag]) {
+        clearInterval(statusCheckIntervals[pcTag]);
+        delete statusCheckIntervals[pcTag];
+    }
+}
+
+async function checkDisconnectedDevices(pcTag, labId) {
+    try {
+        const response = await fetch('/api/check_disconnected_devices', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pc_tag: pcTag,
+                lab_id: labId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update status for disconnected devices
+            // Backend now uses vendor/product matching, but returns unique_ids for backward compatibility
+            if (data.disconnected_ids && data.disconnected_ids.length > 0) {
+                data.disconnected_ids.forEach(uniqueId => {
+                    updatePeripheralStatus(pcTag, uniqueId, 'unplugged');
+                });
+            }
+            
+            // Update status for reconnected devices
+            if (data.reconnected_ids && data.reconnected_ids.length > 0) {
+                data.reconnected_ids.forEach(uniqueId => {
+                    updatePeripheralStatus(pcTag, uniqueId, 'connected');
+                });
+            }
+            
+            // Also update by vendor/product if available (handles USB port changes)
+            if (data.newly_connected_registered && data.newly_connected_registered.length > 0) {
+                data.newly_connected_registered.forEach(device => {
+                    if (device.vendor_id && device.product_id) {
+                        updatePeripheralStatusByVendorProduct(pcTag, device.vendor_id, device.product_id, 'connected');
+                    } else if (device.unique_id) {
+                        updatePeripheralStatus(pcTag, device.unique_id, 'connected');
+                    }
+                });
+            }
+            
+            // Log updates if any
+            if (data.disconnected_count > 0 || data.reconnected_count > 0) {
+                console.log(`Status updated: ${data.disconnected_count} unplugged, ${data.reconnected_count} connected.`);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking device status:', error);
+    }
+}
+
+function updatePeripheralStatus(pcTag, uniqueId, newStatus) {
+    // Find the row and update its status
+    // Note: Backend now uses vendor/product matching, but we still receive unique_id for backward compatibility
+    // We'll match by unique_id first, but also support vendor/product matching
+    const table = document.getElementById(`table-${pcTag}`);
+    if (!table) return;
+    
+    const tbody = table.getElementsByTagName('tbody')[0];
+    if (!tbody) return;
+    
+    const rows = tbody.getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const cells = row.cells;
+        // Column structure: Device(0), Brand(1), Serial Number(2), Unique ID(3), Vendor ID(4), Product ID(5), Status(6), Action(7), Remarks(8)
+        if (cells.length >= 7) {
+            // Try matching by unique_id first (for backward compatibility)
+            const uniqueIdCell = cells[3];
+            if (uniqueIdCell && uniqueIdCell.textContent.trim() === uniqueId) {
+                updateStatusCell(cells[6], newStatus);
+                break;
+            }
+        }
+    }
+}
+
+function updateStatusCell(statusCell, newStatus) {
+    if (!statusCell) return;
+    
+    const statusPill = statusCell.querySelector('.status-pill');
+    if (statusPill) {
+        // Remove old status classes
+        statusPill.className = 'status-pill';
+        // Add new status class
+        const statusClass = newStatus.toLowerCase();
+        statusPill.classList.add(`status-${statusClass}`);
+        // Update text - capitalize first letter
+        statusPill.textContent = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+        // Add visual feedback with animation
+        statusPill.style.transition = 'all 0.3s ease';
+        statusPill.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            statusPill.style.transform = 'scale(1)';
+        }, 300);
+    }
+}
+
+// Update status by vendor/product ID (for USB port changes)
+function updatePeripheralStatusByVendorProduct(pcTag, vendorId, productId, newStatus) {
+    const table = document.getElementById(`table-${pcTag}`);
+    if (!table) return;
+    
+    const tbody = table.getElementsByTagName('tbody')[0];
+    if (!tbody) return;
+    
+    const rows = tbody.getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const cells = row.cells;
+        // Column structure: Device(0), Brand(1), Serial Number(2), Unique ID(3), Vendor ID(4), Product ID(5), Status(6), Action(7), Remarks(8)
+        if (cells.length >= 7) {
+            const vendorIdCell = cells[4];
+            const productIdCell = cells[5];
+            
+            if (vendorIdCell && productIdCell) {
+                const rowVendorId = vendorIdCell.textContent.trim();
+                const rowProductId = productIdCell.textContent.trim();
+                
+                // Match by vendor/product ID (handles USB port changes)
+                if (rowVendorId === vendorId && rowProductId === productId) {
+                    updateStatusCell(cells[6], newStatus);
+                    // Don't break - there might be multiple entries with same vendor/product (shouldn't happen, but be safe)
+                }
+            }
+        }
+    }
+}
+
+// Enhanced function to refresh all peripheral statuses from server
+async function refreshPeripheralStatuses(pcTag, labId) {
+    try {
+        const response = await fetch(`/api/get_peripherals?pc_tag=${encodeURIComponent(pcTag)}&lab_id=${labId}&include_unregistered=false`);
+        const data = await response.json();
+        
+        if (data.success && data.peripherals) {
+            const table = document.getElementById(`table-${pcTag}`);
+            if (!table) {
+                console.warn(`Table not found for PC: ${pcTag}`);
+                return;
+            }
+            
+            const tbody = table.getElementsByTagName('tbody')[0];
+            if (!tbody) {
+                console.warn(`Table body not found for PC: ${pcTag}`);
+                return;
+            }
+            
+            const rows = tbody.getElementsByTagName('tr');
+            
+            // Create maps of current peripherals by unique_id and vendor/product
+            const peripheralMapByUniqueId = {};
+            const peripheralMapByVendorProduct = {};
+            data.peripherals.forEach(p => {
+                if (p.unique_id) {
+                    peripheralMapByUniqueId[p.unique_id] = p;
+                }
+                if (p.vendor_id && p.product_id && p.vendor_id !== 'UNKNOWN' && p.product_id !== 'UNKNOWN') {
+                    const key = `${p.vendor_id}_${p.product_id}`;
+                    peripheralMapByVendorProduct[key] = p;
+                }
+            });
+            
+            // Update existing rows
+            let updatedCount = 0;
+            for (let row of rows) {
+                const cells = row.cells;
+                // Column structure: Device(0), Brand(1), Serial Number(2), Unique ID(3), Vendor ID(4), Product ID(5), Status(6), Action(7), Remarks(8)
+                if (cells.length >= 7) {
+                    let peripheral = null;
+                    
+                    // Try matching by vendor/product first (handles USB port changes)
+                    const vendorIdCell = cells[4];
+                    const productIdCell = cells[5];
+                    if (vendorIdCell && productIdCell) {
+                        const vendorId = vendorIdCell.textContent.trim();
+                        const productId = productIdCell.textContent.trim();
+                        if (vendorId && productId && vendorId !== '—' && productId !== '—') {
+                            const key = `${vendorId}_${productId}`;
+                            peripheral = peripheralMapByVendorProduct[key];
+                        }
+                    }
+                    
+                    // Fallback to unique_id matching if vendor/product didn't match
+                    if (!peripheral) {
+                        const uniqueIdCell = cells[3];
+                        if (uniqueIdCell) {
+                            const uniqueId = uniqueIdCell.textContent.trim();
+                            peripheral = peripheralMapByUniqueId[uniqueId];
+                        }
+                    }
+                    
+                    if (peripheral) {
+                        const statusCell = cells[6]; // Status is now at index 6
+                        if (statusCell) {
+                            const statusPill = statusCell.querySelector('.status-pill');
+                            if (statusPill) {
+                                const currentStatus = statusPill.textContent.trim().toLowerCase();
+                                const newStatus = (peripheral.status || '').toLowerCase();
+                                
+                                if (currentStatus !== newStatus) {
+                                    const identifier = peripheral.vendor_id && peripheral.product_id 
+                                        ? `${peripheral.vendor_id}_${peripheral.product_id}` 
+                                        : peripheral.unique_id;
+                                    console.log(`Updating status for ${identifier}: ${currentStatus} -> ${newStatus}`);
+                                    statusPill.className = `status-pill status-${newStatus}`;
+                                    statusPill.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                                    // Add visual feedback
+                                    statusPill.style.transition = 'all 0.3s ease';
+                                    statusPill.style.transform = 'scale(1.1)';
+                                    setTimeout(() => {
+                                        statusPill.style.transform = 'scale(1)';
+                                    }, 300);
+                                    updatedCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (updatedCount > 0) {
+                console.log(`Updated ${updatedCount} peripheral status(es) for PC: ${pcTag}`);
+            }
+        } else {
+            console.warn(`Failed to refresh statuses for PC ${pcTag}:`, data.message || 'Unknown error');
+        }
+    } catch (error) {
+        console.error(`Error refreshing peripheral statuses for PC ${pcTag}:`, error);
+    }
+}
+
+// Pagination and Search Variables
+let currentPage = 1;
+const itemsPerPage = 10; // Display 10 PCs per page for better card information display
+let filteredPCs = [];
+let currentView = 'grid';
+
+// View Toggle Function
+function switchView(viewType) {
+    currentView = viewType;
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    const gridBtn = document.getElementById('grid-view-btn');
+    const listBtn = document.getElementById('list-view-btn');
+    
+    if (viewType === 'grid') {
+        gridView.classList.add('active');
+        listView.classList.remove('active');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        gridView.classList.remove('active');
+        listView.classList.add('active');
+        gridBtn.classList.remove('active');
+        listBtn.classList.add('active');
+    }
+    
+    // Refresh filtered list for new view
+    refreshFilteredList();
+    
+    // Apply current search filter if any
+    const searchInput = document.getElementById('pc-search-input');
+    if (searchInput && searchInput.value.trim()) {
+        filterPCs(searchInput.value);
+    } else {
+        // Reset to first page when switching views
+        currentPage = 1;
+        updateDisplay();
+    }
+}
+
+// Search Function
+function filterPCs(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const view = currentView === 'grid' ? 'grid' : 'list';
+    const selector = view === 'grid' ? '.pc-card' : '.pc-list-item';
+    const allCards = document.querySelectorAll(selector);
+    const allPCs = Array.from(allCards);
+    
+    if (term === '') {
+        filteredPCs = allPCs;
+    } else {
+        filteredPCs = allPCs.filter(card => {
+            const pcName = card.querySelector('.pc-card-name, .pc-list-name')?.textContent.toLowerCase() || '';
+            return pcName.includes(term);
+        });
+    }
+    
+    
+    currentPage = 1;
+    updateDisplay();
+}
+
+// Update Display with Pagination
+function updateDisplay() {
+    const view = currentView === 'grid' ? 'grid' : 'list';
+    
+    // Get all items for current view
+    const allItems = view === 'grid'
+        ? Array.from(document.querySelectorAll('.pc-card'))
+        : Array.from(document.querySelectorAll('.pc-list-item'));
+    
+    if (allItems.length === 0) return;
+    
+    // Use filtered list if search is active, otherwise use all items
+    const itemsToPaginate = filteredPCs.length > 0 ? filteredPCs : allItems;
+    
+    // Hide all items first
+    allItems.forEach(item => {
+        item.style.display = 'none';
+    });
+    
+    // Calculate pagination
+    const totalItems = itemsToPaginate.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    // Show items for current page
+    const itemsToShow = itemsToPaginate.slice(startIndex, endIndex);
+    
+    itemsToShow.forEach(item => {
+        if (view === 'grid') {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'grid';
+        }
+    });
+    
+    // Update pagination controls
+    updatePagination(totalPages, totalItems);
+    
+    // Show "no results" message if needed
+    const noResultsMsg = document.getElementById('no-results-message');
+    if (totalItems === 0 && filteredPCs.length === 0 && document.getElementById('pc-search-input')?.value.trim()) {
+        if (!noResultsMsg) {
+            const container = view === 'grid' 
+                ? document.querySelector('.pc-grid')?.parentElement
+                : document.getElementById('list-view');
+            if (container) {
+                const msg = document.createElement('div');
+                msg.id = 'no-results-message';
+                msg.style.cssText = 'text-align: center; padding: 40px; color: #6c757d;';
+                msg.innerHTML = '<i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i><p style="font-size: 16px; margin: 0;">No PCs found matching your search.</p>';
+                container.appendChild(msg);
+            }
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+// Update Pagination Controls
+function updatePagination(totalPages, totalItems) {
+    const paginationContainer = document.getElementById('pagination-container');
+    if (!paginationContainer) return;
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    
+    let paginationHTML = `
+        <button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
+    
+    // Show page numbers (max 5 visible)
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    if (startPage > 1) {
+        paginationHTML += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) {
+            paginationHTML += `<span class="pagination-info">...</span>`;
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">
+                ${i}
+            </button>
+        `;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHTML += `<span class="pagination-info">...</span>`;
+        }
+        paginationHTML += `<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    paginationHTML += `
+        <button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <span class="pagination-info">Showing ${startItem}-${endItem} of ${totalItems}</span>
+    `;
+    
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Go to Page Function
+function goToPage(page) {
+    const totalItems = filteredPCs.length || document.querySelectorAll('.pc-card, .pc-list-item').length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        updateDisplay();
+        // Scroll to top of content
+        const container = currentView === 'grid' 
+            ? document.querySelector('.pc-grid')?.parentElement
+            : document.getElementById('list-view')?.parentElement;
+        if (container) {
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+// Initialize Search and Pagination
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('pc-search-input');
+    if (searchInput) {
+        // Initialize filtered list with all PCs
+        refreshFilteredList();
+        
+        searchInput.addEventListener('input', function(e) {
+            filterPCs(e.target.value);
+        });
+        
+        // Initial display
+        setTimeout(() => {
+            updateDisplay();
+        }, 100);
+    }
+});
+
+// Refresh filtered list (called when view changes)
+function refreshFilteredList() {
+    const view = currentView === 'grid' ? 'grid' : 'list';
+    if (view === 'grid') {
+        filteredPCs = Array.from(document.querySelectorAll('.pc-card'));
+    } else {
+        filteredPCs = Array.from(document.querySelectorAll('.pc-list-item'));
+    }
+}
+
+// View Student Profile Function
+function viewStudentProfile(username) {
+    const modal = document.getElementById('studentProfileModal');
+    const content = document.getElementById('studentProfileContent');
+    
+    // Show loading state
+    content.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <p>Loading profile...</p>
+        </div>
+    `;
+    modal.style.display = 'flex';
+    
+    // Fetch student profile
+    fetch(`/api/get_student_profile?username=${encodeURIComponent(username)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.profile) {
+                const profile = data.profile;
+                const profilePic = profile.profile_pic && profile.profile_pic !== 'None' && profile.profile_pic !== '' 
+                    ? profile.profile_pic 
+                    : '/static/default-avatar.jpg';
+                
+                content.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <img src="${profilePic}" 
+                             onerror="this.onerror=null; this.src='/static/default-avatar.jpg';" 
+                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <h3 style="margin: 15px 0 5px 0; color: #212529;">${profile.name || username}</h3>
+                        <p style="color: #6c757d; margin: 0;">@${username}</p>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Email</strong>
+                            <p style="margin: 5px 0 0 0; color: #212529; font-size: 15px;">${profile.email || '—'}</p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Grade & Section</strong>
+                            <p style="margin: 5px 0 0 0; color: #212529; font-size: 15px;">${profile.grade || '—'} ${profile.section ? '- ' + profile.section : ''}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Contact</strong>
+                            <p style="margin: 5px 0 0 0; color: #212529; font-size: 15px;">${profile.contact || '—'}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <button onclick="closeStudentProfileModal()" style="padding: 10px 30px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                        <p style="color: #6c757d;">Failed to load profile: ${data.message || 'Unknown error'}</p>
+                        <button onclick="closeStudentProfileModal()" style="margin-top: 15px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching profile:', error);
+            content.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                    <p style="color: #6c757d;">Error loading profile. Please try again.</p>
+                    <button onclick="closeStudentProfileModal()" style="margin-top: 15px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Close
+                    </button>
+                </div>
+            `;
+        });
+}
+
+function closeStudentProfileModal() {
+    document.getElementById('studentProfileModal').style.display = 'none';
+}
+
+// Delete PC Device Function
+function deletePCDevice(deviceId, pcTag) {
+    if (!confirm(`Are you sure you want to delete PC "${pcTag}"? This will also delete all associated peripherals.`)) {
+        return;
+    }
+    
+    fetch('/api/delete_device', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: deviceId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`PC "${pcTag}" has been deleted successfully.`);
+            // Reload page to refresh data
+            window.location.reload();
+        } else {
+            alert('Failed to delete device: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting device:', error);
+        alert('Error deleting device. Please try again.');
+    });
+}
+
+// Add Device Modal Functions
+function openAddDeviceModal() {
+    const comlabId = {{ comlab_id }};
+    fetch(`/generate_link?comlab_id=${comlabId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('deviceLink').value = data.link;
+                document.getElementById('addDeviceModal').style.display = 'flex';
+            } else {
+                alert('Failed to generate link. Please try again.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error generating link. Please try again.');
+        });
+}
+
+function closeAddDeviceModal() {
+    document.getElementById('addDeviceModal').style.display = 'none';
+}
+
+function copyLink() {
+    const linkInput = document.getElementById('deviceLink');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        alert('✅ Link copied to clipboard!');
+    }).catch(() => {
+        document.execCommand('copy');
+        alert('✅ Link copied to clipboard!');
+    });
+}
+
+function openLinkInNewTab() {
+    const linkInput = document.getElementById('deviceLink');
+    const link = linkInput.value;
+    if (link) {
+        window.open(link, '_blank');
+    } else {
+        alert('No link available to open.');
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inventory management page loaded');
+    // Status monitoring will start when a PC card is opened
+    // This prevents unnecessary API calls when cards are not being viewed
+    
+    // Close modal when clicking outside
+    const addDeviceModal = document.getElementById('addDeviceModal');
+    if (addDeviceModal) {
+        addDeviceModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddDeviceModal();
+            }
+        });
+    }
+});
+
+// Stop monitoring when page unloads
+window.addEventListener('beforeunload', function() {
+    {% if devices %}
+    {% for pc in devices %}
+    stopStatusMonitoring('{{ pc.tag }}');
+    {% endfor %}
+    {% endif %}
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+        </div>
+    </div>
+</body>
+</html>

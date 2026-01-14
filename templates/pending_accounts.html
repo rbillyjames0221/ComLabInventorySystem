@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending Accounts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        body { font-family: 'Segoe UI'; text-align:center; background:#edf1f7; padding:0; margin:0; }
+        .top-bar { background:#007bff;color:white;padding:20px 30px;border-radius:12px;margin:20px; }
+        .top-bar h2 { margin:0; font-size:clamp(18px,4vw,24px); }
+        .table-responsive-wrapper { width:95%; margin:20px auto; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        table { width:100%; min-width:600px; margin:auto; border-collapse: collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+        th, td { padding:10px; border-bottom:1px solid #ddd;}
+        th { background:#007bff; color:white; position:sticky; top:0; z-index:10;}
+        tr:hover { background:#f5f5f5;}
+        .action-btn { padding:10px 16px; font-weight:600; border:none; border-radius:6px; cursor:pointer; min-height:44px;}
+        .approve { background:#28a745; color:white;}
+        .approve:hover { background:#1f8a37;}
+        .reject { background:#dc3545; color:white;}
+        .reject:hover { background:#a71d2a;}
+        .flash { width:95%; margin:10px auto; padding:10px; border-radius:6px; font-weight:600; color:white;}
+        .flash-success { background:#28a745;}
+        @media (max-width:768px) {
+            .table-responsive-wrapper { width:100%; margin:20px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    {% set current_page = 'pending_accounts' %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <!-- Top Bar -->
+        {% include 'includes/topbar.html' %}
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, msg in messages %}
+                  <div class="flash flash-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="table-responsive-wrapper">
+            <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in pending %}
+            <tr>
+                <td>{{ user['id'] }}</td>
+                <td>{{ user['username'] }}</td>
+                <td>{{ user['name'] }}</td>
+                <td>{{ user['role'] }}</td>
+                <td>{{ user['status'] }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('approve_account', user_id=user['id']) }}" style="display:inline;">
+                        <button class="action-btn approve" type="submit"><i class="fas fa-check"></i> Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('reject_account', user_id=user['id']) }}" style="display:inline;">
+                        <button class="action-btn reject" type="submit"><i class="fas fa-times"></i> Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+            </div>
+        </div>
+    </div>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topbar-menu.js') }}"></script>
+{% if current_user and current_user.get('role') == 'admin' %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endif %}
+</body>
+</html>
