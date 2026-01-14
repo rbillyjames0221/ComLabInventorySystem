@@ -280,6 +280,24 @@
         color: #721c24;
     }
 
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .container { padding: 0 15px; margin: 15px auto; }
+        form { padding: 25px 20px; max-width: 100%; }
+        h2 { font-size: 20px; }
+        input, select { font-size: 16px; padding: 12px; }
+        button { font-size: 15px; padding: 12px 18px; }
+        .device-info { padding: 12px; margin: 12px 0; }
+        .device-info .value { font-size: 13px; }
+    }
+
+    @media (max-width: 480px) {
+        form { padding: 20px 15px; }
+        h2 { font-size: 18px; }
+        input, select { font-size: 15px; padding: 10px; }
+        button { font-size: 14px; padding: 10px 16px; }
+    }
+
     .device-type-badge.unknown {
         background: #e2e3e5;
         color: #383d41;
