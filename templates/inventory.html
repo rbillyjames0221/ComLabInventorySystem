@@ -49,14 +49,14 @@ body {
 
 @media (min-width: 1024px) {
     .pc-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     }
 }
 
 .pc-card {
     background: white;
     border-radius: 16px;
-    padding: 24px 20px;
+    padding: 28px 24px;
     position: relative;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -65,8 +65,10 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    min-height: 220px;
+    min-height: 260px;
     border: 1px solid #e9ecef;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .pc-card:hover {
@@ -181,16 +183,17 @@ body {
 
 .pc-card-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin-top: auto;
     width: 100%;
-    padding-top: 16px;
+    padding-top: 18px;
     border-top: 1px solid #e9ecef;
+    box-sizing: border-box;
 }
 
 .pc-card-btn {
     flex: 1;
-    padding: 10px 16px;
+    padding: 12px 16px;
     background: linear-gradient(135deg, var(--primary) 0%, #0056b3 100%);
     color: white;
     border: none;
@@ -204,6 +207,8 @@ body {
     transition: all 0.3s ease;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0,123,255,0.3);
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .pc-card-btn:hover {
@@ -213,7 +218,8 @@ body {
 }
 
 .pc-card-delete-btn {
-    padding: 10px 14px;
+    flex: 1;
+    padding: 12px 16px;
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     color: white;
     border: none;
@@ -225,7 +231,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .pc-card-delete-btn:hover {
@@ -788,15 +797,15 @@ body {
     }
     
     .pc-card-actions {
-        gap: 6px;
-        padding-top: 12px;
+        gap: 8px;
+        padding-top: 14px;
         flex-direction: column;
         width: 100%;
     }
     
     .pc-card-btn {
         font-size: 13px;
-        padding: 10px 12px;
+        padding: 12px 16px;
         min-height: 44px;
         width: 100%;
         justify-content: center;
@@ -804,7 +813,7 @@ body {
     
     .pc-card-delete-btn {
         font-size: 13px;
-        padding: 10px 12px;
+        padding: 12px 16px;
         min-height: 44px;
         width: 100%;
     }
@@ -1669,7 +1678,7 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
     .pc-card-btn,
     .pc-card-delete-btn {
         font-size: 12px;
-        padding: 9px 10px;
+        padding: 11px 14px;
     }
     
     .pc-list-item {
