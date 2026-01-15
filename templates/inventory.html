@@ -982,6 +982,21 @@ body {
 .status-missing { background:#6c757d; }
 .status-replaced { background:#FF4000; }
 
+.status-change-btn {
+    margin-left: 8px;
+    padding: 4px 8px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.status-change-btn:hover {
+    background: #0056b3;
+}
+
 /* Table */
 .peripherals-table { width:100%; border-collapse:collapse; }
 .peripherals-table th, .peripherals-table td {
@@ -2053,7 +2068,14 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
                     <td>{{ p.unique_id }}</td>
                     <td class="vendor-id-cell">{{ p.vendor_id or '—' }}</td>
                     <td class="product-id-cell">{{ p.product_id or '—' }}</td>
-                    <td><span class="status-pill status-{{ p.status }}">{{ p.status }}</span></td>
+                    <td>
+                        <span class="status-pill status-{{ p.status }}">{{ p.status }}</span>
+                        {% if session.get('role') == 'admin' %}
+                        <button class="status-change-btn" onclick="openStatusModal('{{ p.id }}', '{{ p.status }}')" title="Change Status">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        {% endif %}
+                    </td>
                     <td class="action-buttons">
                         <button class="edit-btn" onclick="enableEdit('{{ p.id }}')">Edit</button>
                         <button class="save-btn" onclick="saveEdit('{{ p.id }}')">Save</button>
@@ -2079,6 +2101,36 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
     <p>No devices found in this lab. Please register devices first.</p>
 </div>
 {% endif %}
+
+<!-- Status Change Modal -->
+<div id="statusModal" class="remarks-modal-overlay" style="display: none;">
+    <div class="remarks-modal-content">
+        <div class="remarks-modal-header">
+            <h3><i class="fas fa-exchange-alt"></i> Change Status</h3>
+            <button class="remarks-modal-close" onclick="closeStatusModal()">&times;</button>
+        </div>
+        <div class="remarks-modal-body">
+            <label for="statusSelect">New Status:</label>
+            <select id="statusSelect" class="form-control">
+                <option value="connected">Connected</option>
+                <option value="unplugged">Unplugged</option>
+                <option value="missing">Missing</option>
+                <option value="faulty">Faulty</option>
+                <option value="replaced">Replaced</option>
+            </select>
+            <label for="statusReason" style="margin-top: 15px;">Reason (optional):</label>
+            <textarea id="statusReason" placeholder="Enter reason for status change..." rows="3"></textarea>
+        </div>
+        <div class="remarks-modal-actions">
+            <button class="remarks-modal-btn remarks-modal-btn-cancel" onclick="closeStatusModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="remarks-modal-btn remarks-modal-btn-save" onclick="saveStatusChange()">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Remarks Edit Modal -->
 <div id="remarksModal" class="remarks-modal-overlay">
@@ -3850,6 +3902,74 @@ window.addEventListener('beforeunload', function() {
     stopStatusMonitoring('{{ pc.tag }}');
     {% endfor %}
     {% endif %}
+});
+
+// Status Management Functions
+let currentStatusPeripheralId = null;
+
+function openStatusModal(peripheralId, currentStatus) {
+    currentStatusPeripheralId = peripheralId;
+    const modal = document.getElementById('statusModal');
+    const statusSelect = document.getElementById('statusSelect');
+    statusSelect.value = currentStatus.toLowerCase();
+    document.getElementById('statusReason').value = '';
+    modal.style.display = 'flex';
+}
+
+function closeStatusModal() {
+    document.getElementById('statusModal').style.display = 'none';
+    currentStatusPeripheralId = null;
+}
+
+function saveStatusChange() {
+    if (!currentStatusPeripheralId) return;
+    
+    const newStatus = document.getElementById('statusSelect').value;
+    const reason = document.getElementById('statusReason').value;
+    
+    fetch('/api/update_peripheral_status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            peripheral_id: currentStatusPeripheralId,
+            status: newStatus,
+            reason: reason
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Update status in table
+            const row = document.getElementById(`peripheral-${currentStatusPeripheralId}`);
+            if (row) {
+                const statusCell = row.querySelector('td:nth-child(7)');
+                if (statusCell) {
+                    const statusPill = statusCell.querySelector('.status-pill');
+                    if (statusPill) {
+                        statusPill.className = `status-pill status-${newStatus}`;
+                        statusPill.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                    }
+                }
+            }
+            closeStatusModal();
+            alert('Status updated successfully!');
+            // Refresh the page to show updated status
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to update status'));
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error updating status. Please try again.');
+    });
+}
+
+// Close status modal when clicking outside
+document.getElementById('statusModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeStatusModal();
+    }
 });
 </script>
 

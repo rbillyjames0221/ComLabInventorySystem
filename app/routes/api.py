@@ -1062,3 +1062,119 @@ def check_disconnected_devices():
             "error": str(e),
             "message": f"Failed to check disconnected devices: {str(e)}"
         }), 500
+
+
+@api_bp.route("/api/update_peripheral_status", methods=["POST"])
+@login_required
+@limiter.limit("30 per minute")
+def update_peripheral_status():
+    """Update peripheral status manually"""
+    try:
+        data = request.get_json()
+        peripheral_id = data.get("peripheral_id")
+        new_status = data.get("status")
+        reason = data.get("reason", "")
+        updated_by = session.get("username", "unknown")
+        
+        if not peripheral_id or not new_status:
+            return jsonify({
+                "success": False,
+                "message": "Missing required fields: peripheral_id and status"
+            }), 400
+        
+        from app.services.status_service import StatusService
+        StatusService.update_status(peripheral_id, new_status, reason, updated_by)
+        
+        return jsonify({
+            "success": True,
+            "message": f"Status updated to {new_status}"
+        })
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": f"Failed to update status: {str(e)}"
+        }), 500
+
+
+@api_bp.route("/api/get_status_history/<int:peripheral_id>")
+@login_required
+def get_status_history(peripheral_id):
+    """Get status history for a peripheral"""
+    try:
+        from app.services.status_service import StatusService
+        history = StatusService.get_status_history(peripheral_id)
+        
+        history_list = []
+        for entry in history:
+            history_list.append({
+                "id": entry["id"],
+                "old_status": entry["old_status"],
+                "new_status": entry["new_status"],
+                "reason": entry["reason"],
+                "updated_by": entry["updated_by"],
+                "updated_at": entry["updated_at"]
+            })
+        
+        return jsonify({
+            "success": True,
+            "history": history_list
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "history": []
+        }), 500
+
+
+@api_bp.route("/api/bulk_update_status", methods=["POST"])
+@login_required
+@limiter.limit("20 per minute")
+def bulk_update_status():
+    """Bulk update status for multiple peripherals"""
+    try:
+        data = request.get_json()
+        peripheral_ids = data.get("peripheral_ids", [])
+        new_status = data.get("status")
+        reason = data.get("reason", "")
+        updated_by = session.get("username", "unknown")
+        
+        if not peripheral_ids or not new_status:
+            return jsonify({
+                "success": False,
+                "message": "Missing required fields: peripheral_ids and status"
+            }), 400
+        
+        from app.services.status_service import StatusService
+        result = StatusService.bulk_update_status(peripheral_ids, new_status, reason, updated_by)
+        
+        return jsonify({
+            "success": True,
+            "result": result
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": f"Failed to bulk update status: {str(e)}"
+        }), 500
+
+
+@api_bp.route("/api/get_status_options")
+def get_status_options():
+    """Get available status options"""
+    from app.utils.constants import PERIPHERAL_STATUSES
+    return jsonify({
+        "success": True,
+        "statuses": PERIPHERAL_STATUSES
+    })

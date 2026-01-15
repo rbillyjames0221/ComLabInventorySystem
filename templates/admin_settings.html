@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - ComLab Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    {% include 'includes/topbar.html' %}
+    {% include 'includes/sidebar.html' %}
+</head>
+<body>
+    <div class="main-content">
+        <div class="container">
+            <h1><i class="fas fa-cog"></i> System Settings</h1>
+            
+            <div class="settings-section">
+                <h2>General Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>System Name</label>
+                        <input type="text" id="system_name" value="{{ settings.get('system_name', 'ComLab Inventory System') }}">
+                        <button onclick="saveSetting('system_name')">Save</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>Session Timeout (minutes)</label>
+                        <input type="number" id="session_timeout" value="{{ settings.get('session_timeout', '480') }}">
+                        <button onclick="saveSetting('session_timeout')">Save</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>Device Check Interval (seconds)</label>
+                        <input type="number" id="device_check_interval" value="{{ settings.get('device_check_interval', '10') }}">
+                        <button onclick="saveSetting('device_check_interval')">Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h2>Audit Logs</h2>
+                <div id="audit-logs-container">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-logs-body">
+                            <!-- Logs will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .settings-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .setting-item label {
+            font-weight: 600;
+        }
+        .setting-item input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .setting-item button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .audit-table th, .audit-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .audit-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+    </style>
+
+    <script>
+        function saveSetting(key) {
+            const value = document.getElementById(key).value;
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({setting_key: key, setting_value: value})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Setting saved successfully!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        }
+
+        function loadAuditLogs() {
+            fetch('/api/audit_logs?limit=50')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const tbody = document.getElementById('audit-logs-body');
+                    tbody.innerHTML = data.logs.map(log => `
+                        <tr>
+                            <td>${log.timestamp}</td>
+                            <td>${log.user_id || 'System'}</td>
+                            <td>${log.action}</td>
+                            <td>${log.details || '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+            });
+        }
+
+        loadAuditLogs();
+        setInterval(loadAuditLogs, 30000); // Refresh every 30 seconds
+    </script>
+</body>
+</html>
+

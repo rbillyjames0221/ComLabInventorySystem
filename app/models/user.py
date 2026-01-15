@@ -36,12 +36,20 @@ class User:
         return check_password_hash(password_hash, password)
     
     @staticmethod
-    def update_password(username, new_password):
+    def update_password(username, new_password, clear_reset_flag=True):
         """Update user password"""
         hashed_password = generate_password_hash(new_password)
         with sqlite3.connect(Config.DB_FILE) as conn:
             cur = conn.cursor()
-            cur.execute("UPDATE users SET password=? WHERE username=?", (hashed_password, username))
+            if clear_reset_flag:
+                # Clear password reset flag when user changes password themselves
+                cur.execute("""
+                    UPDATE users 
+                    SET password = ?, password_reset_required = 0, password_reset_by = NULL, password_reset_at = NULL
+                    WHERE username = ?
+                """, (hashed_password, username))
+            else:
+                cur.execute("UPDATE users SET password=? WHERE username=?", (hashed_password, username))
             conn.commit()
     
     @staticmethod
@@ -211,4 +219,58 @@ class User:
                 result = cur.fetchone()
                 return result[0] if result and result[0] else 0
             return 0
+    
+    @staticmethod
+    def reset_password_by_admin(username, new_password, reset_by):
+        """Reset user password by admin - requires user to change on first login"""
+        hashed_password = generate_password_hash(new_password)
+        from app.utils.helpers import get_current_timestamp
+        reset_at = get_current_timestamp()
+        
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            cur = conn.cursor()
+            # Check if columns exist
+            cur.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in cur.fetchall()]
+            
+            if "password_reset_required" not in columns:
+                cur.execute("ALTER TABLE users ADD COLUMN password_reset_required INTEGER DEFAULT 0")
+            if "password_reset_by" not in columns:
+                cur.execute("ALTER TABLE users ADD COLUMN password_reset_by TEXT")
+            if "password_reset_at" not in columns:
+                cur.execute("ALTER TABLE users ADD COLUMN password_reset_at TEXT")
+            
+            cur.execute("""
+                UPDATE users 
+                SET password = ?, password_reset_required = 1, password_reset_by = ?, password_reset_at = ?
+                WHERE username = ?
+            """, (hashed_password, reset_by, reset_at, username))
+            conn.commit()
+    
+    @staticmethod
+    def check_password_reset_required(username):
+        """Check if user needs to reset password"""
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            cur = conn.cursor()
+            cur.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in cur.fetchall()]
+            
+            if "password_reset_required" not in columns:
+                return False
+            
+            cur.execute("SELECT password_reset_required FROM users WHERE username = ?", (username,))
+            result = cur.fetchone()
+            return result and result[0] == 1
+    
+    @staticmethod
+    def clear_password_reset_required(username):
+        """Clear password reset required flag after user changes password"""
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE users 
+                SET password_reset_required = 0, password_reset_by = NULL, password_reset_at = NULL
+                WHERE username = ?
+            """, (username,))
+            conn.commit()
 

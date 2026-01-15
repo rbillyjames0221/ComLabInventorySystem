@@ -1,0 +1,6 @@
+2026-01-15 01:32:34,995 INFO: Application startup [in C:\INVENTORY\ComLabInventorySystem\app\utils\logging_config.py:35]
+2026-01-15 01:32:41,888 INFO: Application startup [in C:\INVENTORY\ComLabInventorySystem\app\utils\logging_config.py:35]
+2026-01-15 01:32:47,860 INFO: Application startup [in C:\INVENTORY\ComLabInventorySystem\app\utils\logging_config.py:35]
+2026-01-15 01:33:28,318 INFO: Application startup [in C:\INVENTORY\ComLabInventorySystem\app\utils\logging_config.py:35]
+2026-01-15 01:33:41,750 INFO: Application startup [in C:\INVENTORY\ComLabInventorySystem\app\utils\logging_config.py:35]
+2026-01-15 01:34:27,876 INFO: Successful login: Admin (admin) from 192.168.0.117 [in C:\INVENTORY\ComLabInventorySystem\app\routes\auth.py:181]

@@ -568,10 +568,75 @@ def reset_password(user_id):
     try:
         # Reset the password - Row objects can be accessed by column name
         username = target_user["username"]
-        User.update_password(username, new_password)
-        return jsonify({"status": "success", "message": "Password reset successfully"})
+        # Use reset_password_by_admin to set password_reset_required flag
+        User.reset_password_by_admin(username, new_password, admin_username)
+        return jsonify({
+            "status": "success", 
+            "message": "Password reset successfully. User will be prompted to change password on next login."
+        })
     except Exception as e:
         import traceback
         print(f"Error resetting password: {e}")
         print(traceback.format_exc())
         return jsonify({"status": "error", "message": f"An error occurred: {str(e)}"}), 500
+
+
+@admin_bp.route("/admin/settings")
+@admin_required
+def admin_settings():
+    """Admin settings page"""
+    from app.models.system_settings import SystemSettings
+    
+    settings = SystemSettings.get_all()
+    settings_dict = {row['setting_key']: row['setting_value'] for row in settings}
+    
+    return render_template("admin_settings.html", settings=settings_dict)
+
+
+@admin_bp.route("/api/settings", methods=["GET", "POST"])
+@admin_required
+def api_settings():
+    """Get or update system settings"""
+    from app.models.system_settings import SystemSettings
+    from app.utils.audit_log import log_audit
+    
+    if request.method == "GET":
+        settings = SystemSettings.get_all()
+        settings_dict = {row['setting_key']: row['setting_value'] for row in settings}
+        return jsonify({"success": True, "settings": settings_dict})
+    
+    # POST - Update settings
+    data = request.get_json()
+    setting_key = data.get("setting_key")
+    setting_value = data.get("setting_value")
+    description = data.get("description", "")
+    updated_by = session.get("username", "unknown")
+    
+    if not setting_key:
+        return jsonify({"success": False, "message": "setting_key is required"}), 400
+    
+    try:
+        SystemSettings.set(setting_key, setting_value, description, updated_by)
+        log_audit(updated_by, "update_setting", "system_settings", None, 
+                 f"Updated {setting_key} to {setting_value}", request.remote_addr)
+        return jsonify({"success": True, "message": "Setting updated successfully"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@admin_bp.route("/api/audit_logs")
+@admin_required
+def api_audit_logs():
+    """Get audit logs"""
+    from app.utils.audit_log import get_audit_logs
+    
+    user_id = request.args.get("user_id")
+    action = request.args.get("action")
+    limit = request.args.get("limit", 100, type=int)
+    
+    try:
+        logs = get_audit_logs(user_id, action, limit)
+        logs_list = [dict(row) for row in logs]
+        return jsonify({"success": True, "logs": logs_list})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "logs": []}), 500

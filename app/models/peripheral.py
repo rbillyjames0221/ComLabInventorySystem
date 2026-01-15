@@ -230,4 +230,66 @@ class Peripheral:
                 """, (vendor_id, product_id))
                 return cur.fetchall()
             return []
+    
+    @staticmethod
+    def get_by_id(peripheral_id):
+        """Get peripheral by ID"""
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM peripherals WHERE id = ?", (peripheral_id,))
+            return cur.fetchone()
+    
+    @staticmethod
+    def update_status_manual(peripheral_id, new_status, reason=None, updated_by=None):
+        """Manually update peripheral status with history tracking"""
+        from app.models.status_history import StatusHistory
+        from app.utils.helpers import get_current_timestamp
+        from app.utils.constants import PERIPHERAL_STATUSES
+        
+        # Normalize status to lowercase
+        new_status = new_status.lower()
+        
+        # Validate status
+        if new_status not in PERIPHERAL_STATUSES:
+            raise ValueError(f"Invalid status: {new_status}")
+        
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            cur = conn.cursor()
+            
+            # Get current status
+            cur.execute("SELECT status, status_updated_by, status_updated_at, status_reason FROM peripherals WHERE id = ?", (peripheral_id,))
+            current = cur.fetchone()
+            old_status = current[0] if current else None
+            
+            # Update status
+            updated_at = get_current_timestamp()
+            cur.execute("""
+                UPDATE peripherals 
+                SET status = ?, status_updated_by = ?, status_updated_at = ?, status_reason = ?
+                WHERE id = ?
+            """, (new_status, updated_by, updated_at, reason, peripheral_id))
+            
+            # Create history entry
+            if old_status != new_status:
+                StatusHistory.create(peripheral_id, old_status, new_status, reason, updated_by)
+            
+            conn.commit()
+            return True
+    
+    @staticmethod
+    def validate_status_transition(old_status, new_status):
+        """Validate if status transition is allowed"""
+        from app.utils.constants import STATUS_TRANSITIONS
+        
+        old_status = old_status.lower() if old_status else None
+        new_status = new_status.lower()
+        
+        if old_status is None:
+            return True  # Initial status assignment
+        
+        if old_status not in STATUS_TRANSITIONS:
+            return False
+        
+        return new_status in STATUS_TRANSITIONS[old_status]
 

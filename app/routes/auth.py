@@ -153,10 +153,14 @@ def login():
 
                 # Verify password (constant-time comparison handled by werkzeug)
                 if User.verify_password(password_db, password):
+                    # Check if password reset is required
+                    password_reset_required = User.check_password_reset_required(username_db)
+                    
                     # Successful login
                     session["username"] = username_db
                     session["role"] = role
                     session["login_time"] = datetime.now().isoformat()
+                    session["password_reset_required"] = password_reset_required
                     
                     if remember_me:
                         session["remember_me"] = True
@@ -175,6 +179,12 @@ def login():
                     record_login_attempt(username, ip_address, success=True)
                     
                     logger.info(f"Successful login: {username} ({role}) from {ip_address}")
+                    
+                    # If password reset required, redirect to password change page
+                    if password_reset_required:
+                        flash("Please change your password before proceeding.", "warning")
+                        return redirect("/change_password_first_login")
+
                     flash("Login successful!", "success")
 
                     # Start monitoring thread only for 'user' or 'professor' roles
@@ -264,3 +274,54 @@ def user_logout():
     session.clear()
     flash("Logged out successfully!", "success")
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/change_password_first_login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
+def change_password_first_login():
+    """Change password on first login after admin reset"""
+    if "username" not in session:
+        flash("Please login first.", "error")
+        return redirect("/login")
+    
+    username = session.get("username")
+    password_reset_required = session.get("password_reset_required", False)
+    
+    # Check if password reset is actually required
+    if not password_reset_required and not User.check_password_reset_required(username):
+        # Already changed password or not required
+        return redirect("/student_dashboard" if session.get("role") in ["user", "professor"] else "/admin")
+    
+    if request.method == "POST":
+        new_password = request.form.get("new_password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+        
+        if not new_password or not confirm_password:
+            flash("Please fill all fields.", "error")
+            return render_template("change_password_first_login.html")
+        
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return render_template("change_password_first_login.html")
+        
+        if len(new_password) < 8:
+            flash("Password must be at least 8 characters long.", "error")
+            return render_template("change_password_first_login.html")
+        
+        # Update password and clear reset flag
+        User.update_password(username, new_password, clear_reset_flag=True)
+        session["password_reset_required"] = False
+        
+        flash("Password changed successfully! You can now proceed to your dashboard.", "success")
+        logger.info(f"Password changed on first login: {username}")
+        
+        # Redirect to appropriate dashboard
+        role = session.get("role")
+        if role == "admin":
+            return redirect("/admin")
+        elif role in ["user", "professor"]:
+            return redirect("/student_dashboard")
+        else:
+            return redirect("/login")
+    
+    return render_template("change_password_first_login.html")
