@@ -11,7 +11,7 @@ def validate_username_exists(username):
         return cur.fetchone() is not None
 
 
-def validate_device_exists(tag=None, hostname=None, unique_id=None):
+def validate_device_exists(tag=None, hostname=None, unique_id=None, machine_id=None):
     """Check if device already exists by tag, hostname, or unique_id"""
     with sqlite3.connect(Config.DB_FILE) as conn:
         cur = conn.cursor()
@@ -19,6 +19,7 @@ def validate_device_exists(tag=None, hostname=None, unique_id=None):
         cur.execute("PRAGMA table_info(devices)")
         columns = [row[1] for row in cur.fetchall()]
         has_unique_id = "unique_id" in columns
+        has_machine_id = "machine_id" in columns
         
         # Build query based on available parameters
         conditions = []
@@ -35,6 +36,9 @@ def validate_device_exists(tag=None, hostname=None, unique_id=None):
         if unique_id and has_unique_id:
             conditions.append("unique_id = ?")
             params.append(unique_id)
+        if machine_id and has_machine_id:
+            conditions.append("machine_id = ?")
+            params.append(machine_id)
         
         if not conditions:
             return None

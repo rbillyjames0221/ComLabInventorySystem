@@ -313,6 +313,7 @@ async function getClientDeviceInfo() {
             mac_address: 'Unknown', // Browsers cannot access MAC address directly
             device_type: deviceInfo.device_type,
             unique_id: uniqueId,
+            machine_id: uniqueId,
             platform: deviceInfo.platform,
             user_agent: deviceInfo.user_agent,
             screen_resolution: deviceInfo.screen_resolution,

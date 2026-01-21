@@ -148,6 +148,11 @@
         color: #721c24;
         border: 1px solid #f5c6cb;
     }
+    .status-message.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
 
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(15px); }
@@ -391,6 +396,9 @@
             <label>Device Type:</label>
             <div class="value" id="deviceType">-</div>
 
+            <label>Machine ID:</label>
+            <div class="value" id="deviceMachineId">-</div>
+
             <label>Unique ID:</label>
             <div class="value" id="deviceUniqueId">-</div>
         </div>
@@ -399,6 +407,7 @@
         <input type="text" name="tag" id="pcTag" placeholder="Enter PC Tag" required><br>
         <input type="hidden" name="selected_hostname" id="selectedHostname" value="">
         <input type="hidden" name="device_unique_id" id="deviceUniqueIdInput" value="">
+        <input type="hidden" name="machine_id" id="machineIdInput" value="{{ machine_guid or '' }}">
         <input type="hidden" name="device_mac_address" id="deviceMacAddressInput" value="">
         <input type="hidden" name="full_device_info" id="fullDeviceInfoInput" value="">
 
@@ -467,6 +476,7 @@ document.getElementById('registerThisDeviceBtn').addEventListener('click', async
             document.getElementById('deviceIP').textContent = data.ip_address || '-';
             document.getElementById('deviceMAC').textContent = data.mac_address || '-';
             document.getElementById('deviceType').textContent = data.device_type || '-';
+            document.getElementById('deviceMachineId').textContent = data.machine_id || data.unique_id || '-';
             document.getElementById('deviceUniqueId').textContent = data.unique_id || '-';
             
             // Show device info section
@@ -477,6 +487,10 @@ document.getElementById('registerThisDeviceBtn').addEventListener('click', async
             document.getElementById('pcTag').value = pcTagValue;
             document.getElementById('selectedHostname').value = data.hostname || '';
             document.getElementById('deviceUniqueIdInput').value = data.unique_id || '';
+            const machineInput = document.getElementById('machineIdInput');
+            if (machineInput && !machineInput.value.trim()) {
+                machineInput.value = data.machine_id || data.unique_id || '';
+            }
             document.getElementById('deviceMacAddressInput').value = data.mac_address || '';
             
             // Store full device info in a hidden field for server processing
@@ -484,8 +498,24 @@ document.getElementById('registerThisDeviceBtn').addEventListener('click', async
             if (fullDeviceInfoInput) {
                 fullDeviceInfoInput.value = JSON.stringify(data.full_device_info || {});
             }
-            
-            showStatus('success', 'Device information detected successfully! Your device has been identified.');
+
+            showStatus('info', 'Verifying device identity...');
+            const identityResult = await verifyDeviceIdentity({
+                unique_id: data.unique_id,
+                machine_id: data.machine_id,
+                mac_address: data.mac_address,
+                hostname: data.hostname
+            });
+
+            if (identityResult && identityResult.success === false) {
+                showStatus('error', identityResult.message || 'Could not verify device identity.');
+            } else if (identityResult && identityResult.registered) {
+                const labName = identityResult.device.lab_name || (`Lab ${identityResult.device.comlab_id || 'Unknown'}`);
+                const tagInfo = identityResult.device.tag || identityResult.device.hostname || 'Unknown device';
+                showStatus('warning', `This device is already registered as ${tagInfo} in ${labName}. You may still proceed if this is the correct device.`);
+            } else {
+                showStatus('success', 'Device information detected successfully! Your device has been identified.');
+            }
         } else {
             showStatus('error', data.message || 'Failed to detect device information.');
         }
@@ -505,6 +535,28 @@ function showStatus(type, message) {
         setTimeout(() => {
             statusEl.style.display = 'none';
         }, 5000);
+    }
+}
+
+async function verifyDeviceIdentity(identityData) {
+    const params = new URLSearchParams();
+    if (identityData.unique_id) params.append('unique_id', identityData.unique_id);
+    if (identityData.machine_id) params.append('machine_id', identityData.machine_id);
+    if (identityData.mac_address) params.append('mac_address', identityData.mac_address);
+    if (identityData.hostname) params.append('hostname', identityData.hostname);
+    if (!params.toString()) {
+        return null;
+    }
+
+    try {
+        const response = await fetch(`/api/check_device_identity?${params.toString()}`);
+        if (!response.ok) {
+            return { success: false, message: `Identity verification failed (${response.status}).` };
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Identity verification error:', error);
+        return { success: false, message: 'Could not verify device identity. Please try again.' };
     }
 }
 

@@ -10,7 +10,7 @@ from app.models.user import User
 from app.models.device import Device
 from app.models.peripheral import Peripheral
 from app.services.alert_service import AlertService
-from app.utils.helpers import get_hostname
+from app.utils.helpers import get_hostname, get_machine_guid
 from app.utils.auth_decorators import login_required, user_required
 
 api_bp = Blueprint('api', __name__)
@@ -181,8 +181,23 @@ def add_peripheral(comlab_id):
     vendor_id = data.get("vendor", "")
     product_id = data.get("product", "")
     
-    if not all([pc_tag, name, brand, serial]):
-        return jsonify({"success": False, "message": "Missing fields"}), 400
+    # Validate required fields and provide specific error messages
+    missing_fields = []
+    if not pc_tag:
+        missing_fields.append("pc_tag")
+    if not name:
+        missing_fields.append("name")
+    if not brand:
+        missing_fields.append("brand")
+    if not serial:
+        missing_fields.append("serial_number")
+    
+    if missing_fields:
+        return jsonify({
+            "success": False, 
+            "message": f"Missing required fields: {', '.join(missing_fields)}",
+            "missing_fields": missing_fields
+        }), 400
 
     # Check if device exists
     device = Device.get_by_tag(pc_tag)
@@ -467,6 +482,7 @@ def delete_device():
 
 
 @api_bp.route("/api/detect_devices", methods=["GET"])
+@user_required
 def detect_devices():
     """Detect currently connected USB devices using Windows SetupAPI"""
     try:
@@ -496,6 +512,9 @@ def detect_devices():
         
         devices = get_connected_devices()
         
+        if not isinstance(devices, list):
+            devices = []
+        
         return jsonify({
             "success": True,
             "devices": devices,
@@ -521,7 +540,7 @@ def detect_devices():
 
 @api_bp.route("/api/detect_new_device", methods=["POST"])
 @user_required
-@limiter.limit("10 per minute")
+@limiter.limit("200 per minute")
 def detect_new_device():
     """Detect newly plugged-in devices by comparing with previous Windows SetupAPI device list"""
     try:
@@ -691,8 +710,10 @@ def get_current_device_info():
                 except Exception:
                     pass
         
-        # Generate unique ID based on MAC address or hostname
-        if mac_address:
+        machine_guid = get_machine_guid()
+        if machine_guid:
+            unique_id = machine_guid
+        elif mac_address:
             # Use MAC address to generate UUID (deterministic)
             unique_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{mac_address}-{hostname}"))
         else:
@@ -707,6 +728,7 @@ def get_current_device_info():
             "hostname": hostname,
             "ip_address": ip_address,
             "mac_address": mac_address or "Unknown",
+            "machine_id": machine_guid or None,
             "device_type": device_type,
             "unique_id": unique_id,
             "platform": platform.system(),
@@ -722,6 +744,101 @@ def get_current_device_info():
             "error": str(e),
             "message": f"Failed to get device information: {str(e)}"
         }), 500
+
+
+@api_bp.route("/api/check_device_identity", methods=["GET"])
+def check_device_identity():
+    """Verify whether the detected identity already exists in the system"""
+    unique_id = request.args.get("unique_id")
+    mac_address = request.args.get("mac_address")
+    hostname = request.args.get("hostname")
+    machine_id = request.args.get("machine_id")
+
+    if not (unique_id or mac_address or hostname or machine_id):
+        return jsonify({"success": False, "message": "Provide at least one identifier (unique_id, MAC, hostname, or machine_id)."}), 400
+
+    conditions = []
+    params = []
+    if unique_id:
+        conditions.append("d.unique_id = ?")
+        params.append(unique_id)
+    if mac_address:
+        conditions.append("d.mac_address = ?")
+        params.append(mac_address)
+    if hostname:
+        conditions.append("d.hostname = ?")
+        params.append(hostname)
+    if machine_id:
+        conditions.append("d.machine_id = ?")
+        params.append(machine_id)
+
+    try:
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("PRAGMA table_info(devices)")
+            columns = [row[1] for row in cur.fetchall()]
+            if "machine_id" not in columns:
+                try:
+                    conn.execute("ALTER TABLE devices ADD COLUMN machine_id TEXT")
+                    conn.commit()
+                except sqlite3.OperationalError:
+                    pass
+            query = f"""
+                SELECT d.id, d.tag, d.hostname, d.mac_address, d.unique_id, d.machine_id, d.comlab_id, l.name AS lab_name
+                FROM devices d
+                LEFT JOIN labs l ON d.comlab_id = l.id
+                WHERE {" OR ".join(conditions)}
+                LIMIT 1
+            """
+            cur.execute(query, params)
+            row = cur.fetchone()
+
+            if row:
+                return jsonify({
+                    "success": True,
+                    "registered": True,
+                    "message": "This device identity already exists in the system.",
+                    "device": dict(row)
+                })
+
+        return jsonify({
+            "success": True,
+            "registered": False,
+            "message": "Device identity looks unique."
+        })
+    except Exception as e:
+        print(f"Error checking device identity: {e}")
+        return jsonify({
+            "success": False,
+            "message": "Failed to verify device identity. Please try again."
+        }), 500
+
+
+@api_bp.route("/api/update_device_info", methods=["POST"])
+@login_required
+@limiter.limit("5 per minute")
+def update_device_info():
+    """Update PC tag and hostname"""
+    data = request.get_json() or {}
+    pc_id = data.get("pc_id")
+    tag = (data.get("tag") or "").strip()
+    hostname = (data.get("hostname") or "").strip()
+
+    if not pc_id or not tag or not hostname:
+        return jsonify({"success": False, "message": "pc_id, tag, and hostname are required."}), 400
+
+    try:
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            cur = conn.cursor()
+            cur.execute("UPDATE devices SET tag = ?, hostname = ? WHERE id = ?", (tag, hostname, pc_id))
+            if cur.rowcount == 0:
+                return jsonify({"success": False, "message": "No device found with that ID."}), 404
+            conn.commit()
+        return jsonify({"success": True, "tag": tag, "hostname": hostname})
+    except Exception as e:
+        print(f"Error updating device info: {e}")
+        return jsonify({"success": False, "message": "Failed to update device info."}), 500
 
 
 @api_bp.route("/api/scan_network_devices", methods=["GET"])
@@ -866,7 +983,7 @@ def get_peripherals():
 
 @api_bp.route("/api/check_disconnected_devices", methods=["POST"])
 @user_required
-@limiter.limit("10 per minute")
+@limiter.limit("200 per minute")  # Increased for device detection polling (every 500ms = 120 requests/min max)
 def check_disconnected_devices():
     """Check for disconnected devices and update their status"""
     try:

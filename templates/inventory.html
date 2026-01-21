@@ -46,9 +46,13 @@ body {
     }
 }
 
+.pc-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
 @media (min-width: 1024px) {
     .pc-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
 }
 
@@ -65,6 +69,7 @@ body {
     align-items: center;
     justify-content: flex-start;
     min-height: 260px;
+    min-width: 280px;
     border: 1px solid #e9ecef;
     box-sizing: border-box;
     overflow: hidden;
@@ -182,12 +187,19 @@ body {
 
 .pc-card-actions {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: auto;
     width: 100%;
     padding-top: 18px;
     border-top: 1px solid #e9ecef;
     box-sizing: border-box;
+}
+.pc-card-action-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .pc-card-btn {
@@ -241,6 +253,45 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(220,53,69,0.4);
 }
+.pc-card-detail-btn {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(23,123,184,0.3);
+    transition: all 0.3s ease;
+}
+.pc-card-detail-btn:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
+.pc-list-detail-btn {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    box-shadow: 0 2px 6px rgba(23,123,184,0.3);
+    transition: all 0.3s ease;
+}
+.pc-list-detail-btn:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
 
 /* PC Content Modal/Expanded View */
 .pc-content-modal {
@@ -267,12 +318,13 @@ body {
     background: white;
     border-radius: 16px;
     padding: 30px;
-    max-width: 95%;
-    width: 1200px;
+    max-width: 98%;
+    width: 1600px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     position: relative;
+    margin: 0 auto; /* Ensure centered */
 }
 
 .pc-content-wrapper::-webkit-scrollbar {
@@ -589,6 +641,13 @@ body {
     justify-content: flex-end;
     gap: 10px;
     align-items: center;
+}
+.pc-list-action-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    width: 100%;
+    flex-wrap: wrap;
 }
 
 .pc-list-action-btn {
@@ -921,6 +980,137 @@ body {
     transform: rotate(90deg);
 }
 
+.pc-detail-modal {
+    display: none;
+    position: fixed;
+    z-index: 2200;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.pc-detail-modal.active {
+    display: flex;
+}
+.pc-detail-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    width: min(540px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.35);
+    position: relative;
+}
+.pc-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.pc-detail-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 22px;
+}
+.pc-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+    font-size: 14px;
+}
+.pc-detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.pc-detail-row strong {
+    font-size: 13px;
+    color: #495057;
+}
+.pc-detail-row span {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+.pc-detail-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background: #f8f9fa;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+.pc-detail-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+}
+.pc-detail-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+.pc-detail-btn {
+    flex: 1;
+    min-width: 110px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: white;
+    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: 0.2s;
+}
+.pc-detail-btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+.pc-detail-cancel-btn {
+    background: #6c757d;
+}
+.pc-detail-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #155724;
+    min-height: 18px;
+}
+.pc-detail-status.error {
+    color: #721c24;
+}
+.pc-detail-status.info {
+    color: #0c5460;
+}
+.pc-detail-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    font-size: 20px;
+    cursor: pointer;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pc-detail-close:hover {
+    background: #e0e0e0;
+}
+
+
 .add-btn {
     background:var(--primary);
     color:#fff;
@@ -981,29 +1171,41 @@ body {
 .status-missing { background:#6c757d; }
 .status-replaced { background:#FF4000; }
 
-.status-change-btn {
-    margin-left: 8px;
-    padding: 4px 8px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.status-change-btn:hover {
-    background: #0056b3;
-}
-
 /* Table */
-.peripherals-table { width:100%; border-collapse:collapse; }
+.peripherals-table { 
+    width:100%; 
+    border-collapse:collapse;
+    table-layout: auto; /* Allow columns to size based on content */
+    min-width: 100%; /* Ensure table fills container */
+}
 .peripherals-table th, .peripherals-table td {
     padding:12px 15px;
     border-bottom:1px solid #eee;
     text-align:left;
+    white-space: nowrap; /* Prevent text wrapping in cells */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis for long content */
+    max-width: 200px; /* Limit max width, but allow flexibility */
 }
-.peripherals-table th { background:var(--primary); color:white; }
+.peripherals-table th { 
+    background:var(--primary); 
+    color:white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+/* Allow some columns to be wider if needed */
+.peripherals-table td:nth-child(4), /* Unique ID */
+.peripherals-table th:nth-child(4) {
+    max-width: 300px;
+    white-space: normal; /* Allow wrapping for long unique IDs */
+    word-break: break-all;
+}
+.peripherals-table td:nth-child(9), /* Remarks */
+.peripherals-table th:nth-child(9) {
+    max-width: 250px;
+    white-space: normal;
+}
 .vendor-id-cell, .product-id-cell {
     font-family: monospace;
     font-size: 12px;
@@ -1646,7 +1848,7 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
 }
 </style>
 </head>
-<body>
+<body data-comlab-id="{{ comlab_id }}">
     <!-- Sidebar -->
     {% set current_page = 'inventory' %}
     {% set comlab_id = comlab_id %}
@@ -1713,14 +1915,20 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
                 </div>
             </div>
             <div class="pc-card-actions">
-                <button class="pc-card-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
-                    Manage <i class="fa fa-arrow-right"></i>
-                </button>
-                <button class="pc-card-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
+                <div class="pc-card-action-row">
+                    <button class="pc-card-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
+                        Manage <i class="fa fa-arrow-right"></i>
+                    </button>
+                    <button class="pc-card-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </div>
+                <div class="pc-card-action-row">
+                    <button class="pc-card-detail-btn" onclick="event.stopPropagation(); openDeviceDetails('{{ pc.tag }}')">
+                        Details <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
             </div>
-        </div>
     {% endfor %}
     </div>
 </div>
@@ -1754,12 +1962,19 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
             {% endif %}
         </div>
         <div class="pc-list-action">
-            <button class="pc-list-action-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
-                Manage <i class="fa fa-arrow-right"></i>
-            </button>
-            <button class="pc-list-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
-                <i class="fas fa-trash-alt"></i> Delete
-            </button>
+            <div class="pc-list-action-row">
+                <button class="pc-list-action-btn" onclick="event.stopPropagation(); openPCContent('{{ pc.tag }}')">
+                    Manage <i class="fa fa-arrow-right"></i>
+                </button>
+                <button class="pc-list-delete-btn" onclick="event.stopPropagation(); deletePCDevice('{{ pc.id }}', '{{ pc.tag }}')">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+            </div>
+            <div class="pc-list-action-row">
+                <button class="pc-list-detail-btn" onclick="event.stopPropagation(); openDeviceDetails('{{ pc.tag }}')">
+                    Details <i class="fas fa-info-circle"></i>
+                </button>
+            </div>
         </div>
     </div>
     {% endfor %}
@@ -1767,6 +1982,60 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
 
 <!-- Pagination (shared for both views) -->
 <div class="pagination" id="pagination-container"></div>
+
+<!-- Device Detail Modal -->
+<div class="pc-detail-modal" id="detail-modal">
+    <div class="pc-detail-wrapper">
+        <button class="pc-detail-close" onclick="closeDeviceDetails()">&times;</button>
+        <div class="pc-detail-header">
+            <h3><i class="fas fa-info-circle"></i> Device Details</h3>
+        </div>
+        <div class="pc-detail-body">
+            <div class="pc-detail-row">
+                <strong>Tag</strong>
+                <input type="text" id="detail-tag-input" class="pc-detail-input" readonly>
+            </div>
+            <div class="pc-detail-row">
+                <strong>Hostname</strong>
+                <input type="text" id="detail-hostname-input" class="pc-detail-input" readonly>
+            </div>
+            <div class="pc-detail-row">
+                <strong>IP Address</strong>
+                <span id="detail-ip">—</span>
+            </div>
+            <div class="pc-detail-row">
+                <strong>MAC Address</strong>
+                <span id="detail-mac">—</span>
+            </div>
+            <div class="pc-detail-row">
+                <strong>Machine ID</strong>
+                <span id="detail-machine">—</span>
+            </div>
+            <div class="pc-detail-row">
+                <strong>Unique ID</strong>
+                <span id="detail-unique">—</span>
+            </div>
+        <div class="pc-detail-row">
+            <strong>Status</strong>
+            <span id="detail-status">—</span>
+        </div>
+        <div class="pc-detail-row">
+            <strong>Assigned Student</strong>
+            <span id="detail-student">—</span>
+        </div>
+        <div class="pc-detail-row">
+            <strong>ComLab</strong>
+            <span id="detail-lab">—</span>
+        </div>
+        <div class="pc-detail-footer">
+            <button id="detail-edit-btn" class="pc-detail-btn">Edit</button>
+            <button id="detail-save-btn" class="pc-detail-btn" disabled>Save</button>
+            <button id="detail-cancel-btn" class="pc-detail-btn pc-detail-cancel-btn" style="display:none;">Cancel</button>
+        </div>
+        <div class="pc-detail-status" id="detail-status-msg"></div>
+        </div>
+    </div>
+</div>
 
 <!-- Student Profile Modal -->
 <div id="studentProfileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2001; justify-content: center; align-items: center;">
@@ -1787,28 +2056,62 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* Add Device Modal Styles */
+.add-device-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.add-device-modal-overlay.active {
+    display: flex;
+}
+.add-device-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    max-width: 500px;
+    width: min(90%, 500px);
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    text-align: left;
+}
+.add-device-modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.add-device-modal-content input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    margin: 15px 0;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+}
+.add-device-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+.add-device-modal-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+.add-device-modal-btn.copy { background: #007bff; color: white; }
+.add-device-modal-btn.open { background: #6c757d; color: white; }
+.add-device-modal-btn.done { background: #28a745; color: white; }
 </style>
-
-<!-- Add Device Modal -->
-<div id="addDeviceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; position: relative;">
-        <button onclick="closeAddDeviceModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6c757d;">&times;</button>
-        <h2 style="margin-top: 0;"><i class="fas fa-link"></i> Device Registration Link</h2>
-        <p>Copy and open this link on the device you want to register:</p>
-        <input type="text" id="deviceLink" readonly style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px; margin: 15px 0; box-sizing: border-box;">
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="copyLink()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                <i class="fas fa-copy"></i> Copy Link
-            </button>
-            <button onclick="openLinkInNewTab()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                <i class="fas fa-external-link-alt"></i> Open
-            </button>
-            <button onclick="closeAddDeviceModal()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                <i class="fas fa-check"></i> Done
-            </button>
-        </div>
-    </div>
-</div>
 
 {% for pc in devices %}
 <!-- PC Content Modal -->
@@ -1978,6 +2281,7 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
             <span class="status-pill status-replaced">Replaced</span>
         </div>
 
+        <div style="overflow-x: auto; width: 100%;">
         <table class="peripherals-table" id="table-{{ pc.tag }}">
             <thead>
                 <tr>
@@ -2003,11 +2307,6 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
                     <td class="product-id-cell">{{ p.product_id or '—' }}</td>
                     <td>
                         <span class="status-pill status-{{ p.status }}">{{ p.status }}</span>
-                        {% if session.get('role') == 'admin' %}
-                        <button class="status-change-btn" onclick="openStatusModal('{{ p.id }}', '{{ p.status }}')" title="Change Status">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        {% endif %}
                     </td>
                     <td class="action-buttons">
                         <button class="edit-btn" onclick="enableEdit('{{ p.id }}')">Edit</button>
@@ -2026,41 +2325,38 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
             </tbody>
         </table>
         </div>
+        </div>
     </div>
 </div>
 {% endfor %}
 {% else %}
-<div style="padding: 20px; text-align: center;">
-    <p>No devices found in this lab. Please register devices first.</p>
+<div style="padding: 60px 20px; text-align: center; background: #f8f9fa; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="margin-bottom: 25px;">
+        <i class="fas fa-desktop" style="font-size: 72px; color: #6c757d; opacity: 0.6;"></i>
+    </div>
+    <h3 style="color: #495057; margin-bottom: 12px; font-size: 26px; font-weight: 600;">No devices found in this lab</h3>
+    <p style="color: #6c757d; margin-bottom: 35px; font-size: 16px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+        Get started by adding your first PC device to this computer lab. Click the button below to generate a registration link.
+    </p>
+    <div style="display: flex; justify-content: center;">
+        <button onclick="openAddDeviceModal()" class="add-device-btn" style="font-size: 16px; padding: 14px 28px;">
+            <i class="fas fa-plus"></i> <span>Add Device</span>
+        </button>
+    </div>
 </div>
 {% endif %}
 
-<!-- Status Change Modal -->
-<div id="statusModal" class="remarks-modal-overlay" style="display: none;">
-    <div class="remarks-modal-content">
-        <div class="remarks-modal-header">
-            <h3><i class="fas fa-exchange-alt"></i> Change Status</h3>
-            <button class="remarks-modal-close" onclick="closeStatusModal()">&times;</button>
-        </div>
-        <div class="remarks-modal-body">
-            <label for="statusSelect">New Status:</label>
-            <select id="statusSelect" class="form-control">
-                <option value="connected">Connected</option>
-                <option value="unplugged">Unplugged</option>
-                <option value="missing">Missing</option>
-                <option value="faulty">Faulty</option>
-                <option value="replaced">Replaced</option>
-            </select>
-            <label for="statusReason" style="margin-top: 15px;">Reason (optional):</label>
-            <textarea id="statusReason" placeholder="Enter reason for status change..." rows="3"></textarea>
-        </div>
-        <div class="remarks-modal-actions">
-            <button class="remarks-modal-btn remarks-modal-btn-cancel" onclick="closeStatusModal()">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-            <button class="remarks-modal-btn remarks-modal-btn-save" onclick="saveStatusChange()">
-                <i class="fas fa-save"></i> Save
-            </button>
+<!-- Add Device Modal (placed outside conditional to always be available) -->
+<div id="addDeviceModal" class="add-device-modal-overlay" aria-hidden="true" style="display: none;">
+    <div class="add-device-modal-content">
+        <button onclick="closeAddDeviceModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6c757d;">&times;</button>
+        <h2><i class="fas fa-link"></i> Device Registration Link</h2>
+        <p>Copy and open this link on the device you want to register:</p>
+        <input type="text" id="deviceLink" readonly>
+        <div class="add-device-modal-actions">
+            <button onclick="copyLink()" class="add-device-modal-btn copy"><i class="fas fa-copy"></i> Copy Link</button>
+            <button onclick="openLinkInNewTab()" class="add-device-modal-btn open"><i class="fas fa-external-link-alt"></i> Open</button>
+            <button onclick="closeAddDeviceModal()" class="add-device-modal-btn done"><i class="fas fa-check"></i> Done</button>
         </div>
     </div>
 </div>
@@ -2087,6 +2383,7 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
     </div>
 </div>
 
+<script type="application/json" id="deviceDetailsData">{{ devices|tojson }}</script>
 <script>
 // Open PC Content Modal
 function openPCContent(pcTag) {
@@ -2094,9 +2391,8 @@ function openPCContent(pcTag) {
     if (modal) {
         modal.classList.add('active');
         // Start status monitoring for this PC if not already started
-        const labId = {{ comlab_id }};
         if (!statusCheckIntervals[pcTag]) {
-            startStatusMonitoring(pcTag, labId);
+            startStatusMonitoring(pcTag, comlabId);
         }
     }
 }
@@ -2122,6 +2418,146 @@ document.addEventListener('click', function(event) {
 document.addEventListener('click', function(event) {
     if (event.target.closest('.pc-content-wrapper')) {
         event.stopPropagation();
+    }
+});
+
+const deviceDetailsData = JSON.parse(document.getElementById('deviceDetailsData').textContent);
+const comlabId = Number(document.body.dataset.comlabId || 0);
+let currentDetailDevice = null;
+let detailInitialValues = { tag: '', hostname: '' };
+const detailInputs = [
+    document.getElementById('detail-tag-input'),
+    document.getElementById('detail-hostname-input')
+];
+const detailSaveBtn = document.getElementById('detail-save-btn');
+const detailEditBtn = document.getElementById('detail-edit-btn');
+const detailCancelBtn = document.getElementById('detail-cancel-btn');
+const detailStatusMsg = document.getElementById('detail-status-msg');
+
+detailInputs.forEach(input => {
+    input?.addEventListener('input', () => markDetailChanged());
+});
+detailEditBtn?.addEventListener('click', enableDetailEditing);
+detailCancelBtn?.addEventListener('click', cancelDetailEditing);
+detailSaveBtn?.addEventListener('click', saveDeviceDetails);
+
+function openDeviceDetails(pcTag) {
+    const detailModal = document.getElementById('detail-modal');
+    if (!detailModal) return;
+    const details = (deviceDetailsData || []).find(d => d.tag === pcTag);
+    if (!details) return;
+
+    currentDetailDevice = details;
+    const tagInput = detailInputs[0];
+    const hostInput = detailInputs[1];
+    if (tagInput) {
+        tagInput.value = details.tag || '';
+    }
+    if (hostInput) {
+        hostInput.value = details.hostname || '';
+    }
+
+    detailInitialValues = { tag: tagInput?.value || '', hostname: hostInput?.value || '' };
+    document.getElementById('detail-ip').innerText = details.ip_address || 'Unknown';
+    document.getElementById('detail-mac').innerText = details.mac_address || 'Unknown';
+    document.getElementById('detail-machine').innerText = details.machine_id || details.unique_id || 'Not detected';
+    document.getElementById('detail-unique').innerText = details.unique_id || 'Not detected';
+    document.getElementById('detail-status').innerText = details.status || 'Unknown';
+    document.getElementById('detail-student').innerText = details.student_name || 'Not assigned';
+    document.getElementById('detail-lab').innerText = details.comlab_id ? `Lab ${details.comlab_id}` : 'Unknown';
+
+    setDetailStatus('');
+    disableDetailEditing();
+    detailModal.classList.add('active');
+}
+
+function closeDeviceDetails() {
+    const detailModal = document.getElementById('detail-modal');
+    detailModal?.classList.remove('active');
+    disableDetailEditing();
+}
+
+function enableDetailEditing() {
+    detailInputs.forEach(input => input?.removeAttribute('readonly'));
+    detailSaveBtn.disabled = true;
+    detailCancelBtn.style.display = 'inline-flex';
+    detailEditBtn.disabled = true;
+    detailInputs[0]?.focus();
+}
+
+function cancelDetailEditing() {
+    detailInputs[0].value = detailInitialValues.tag;
+    detailInputs[1].value = detailInitialValues.hostname;
+    disableDetailEditing();
+    setDetailStatus('');
+}
+
+function disableDetailEditing() {
+    detailInputs.forEach(input => input?.setAttribute('readonly', ''));
+    detailSaveBtn.disabled = true;
+    detailCancelBtn.style.display = 'none';
+    detailEditBtn.disabled = false;
+}
+
+function markDetailChanged() {
+    if (!detailInputs[0] || !detailInputs[1]) return;
+    const tagValue = detailInputs[0].value.trim();
+    const hostValue = detailInputs[1].value.trim();
+    const changed = tagValue !== detailInitialValues.tag || hostValue !== detailInitialValues.hostname;
+    detailSaveBtn.disabled = !changed;
+}
+
+function setDetailStatus(message = '', type = 'success') {
+    if (!detailStatusMsg) return;
+    detailStatusMsg.textContent = message;
+    detailStatusMsg.className = 'pc-detail-status';
+    if (type === 'error') {
+        detailStatusMsg.classList.add('error');
+    } else if (type === 'info') {
+        detailStatusMsg.classList.add('info');
+    }
+}
+
+async function saveDeviceDetails() {
+    if (!currentDetailDevice) return;
+    const tagValue = detailInputs[0].value.trim();
+    const hostValue = detailInputs[1].value.trim();
+    if (!tagValue || !hostValue) {
+        setDetailStatus('Tag and hostname cannot be empty.', 'error');
+        return;
+    }
+
+    detailSaveBtn.disabled = true;
+    setDetailStatus('Saving device info...', 'info');
+
+    try {
+        const response = await fetch('/api/update_device_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pc_id: currentDetailDevice.id,
+                tag: tagValue,
+                hostname: hostValue
+            })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            setDetailStatus('Device info updated. Reloading...', 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            setDetailStatus(data.message || 'Failed to save device info.', 'error');
+            detailSaveBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error saving device info:', error);
+        setDetailStatus('Error saving device info. Please try again.', 'error');
+        detailSaveBtn.disabled = false;
+    }
+}
+
+document.getElementById('detail-modal')?.addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeDeviceDetails();
     }
 });
 // Open Add Peripheral Modal
@@ -2176,7 +2612,7 @@ function addPeripheralToPC(pcTag){
         return;
     }
 
-    fetch(`/comlab/{{ comlab_id }}/add_peripheral`, {
+    fetch(`/comlab/${comlabId}/add_peripheral`, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ 
@@ -2189,7 +2625,27 @@ function addPeripheralToPC(pcTag){
             product: product_id || '',
             remarks: ''
         })
-    }).then(r=>r.json())
+    }).then(async r => {
+        if (!r.ok) {
+            const contentType = r.headers.get('content-type');
+            let errorMessage = `Server error (${r.status})`;
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await r.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    if (errorData.missing_fields) {
+                        errorMessage += ` - Missing: ${errorData.missing_fields.join(', ')}`;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                }
+            }
+            
+            throw new Error(errorMessage);
+        }
+        return r.json();
+    })
       .then(resp=>{
         if(resp.success){
             const p = resp.peripheral;
@@ -2236,8 +2692,8 @@ function addPeripheralToPC(pcTag){
             alert(resp.message || "Failed to add peripheral");
         }
     }).catch(err=>{
-        console.error(err);
-        alert("An error occurred while adding the peripheral");
+        console.error("Error adding peripheral:", err);
+        alert("Error adding device: " + (err.message || "An error occurred while adding the peripheral"));
     });
 }
 
@@ -2483,35 +2939,167 @@ document.addEventListener('keydown', function(e) {
 let deviceDetectionIntervals = {};
 let previousDeviceKeys = {};
 let detectedDevices = {}; // Store detected device data per PC
+let detectionLock = {};
+let disconnectionLock = {};
+
+const VENDOR_FRIENDLY_NAMES = {
+    "046D": "Logitech",
+    "045E": "Microsoft",
+    "04F2": "Chicony",
+    "04D9": "Holtek",
+    "04B4": "Integrated Technology Express",
+    "04E8": "Samsung",
+    "05AC": "Apple",
+    "0461": "Primax",
+    "046A": "Genius"
+};
+
+function describeVendor(vendorId, manufacturer) {
+    const rawId = (vendorId || "").toUpperCase();
+    const friendlyName = VENDOR_FRIENDLY_NAMES[rawId] || null;
+    let display = "";
+
+    if (friendlyName && rawId) {
+        display = `${friendlyName} (${rawId})`;
+    } else if (friendlyName) {
+        display = friendlyName;
+    } else if (rawId) {
+        display = rawId;
+    } else if (manufacturer) {
+        display = manufacturer;
+    }
+
+    return {
+        id: rawId,
+        display: display.trim()
+    };
+}
 
 // Get initial device list for a PC
 async function getInitialDevices(pcTag) {
     try {
+        console.log('Fetching initial device list (first call)...');
         // Get devices multiple times to ensure we have a stable baseline
         // This helps catch devices that might be in the process of connecting
-        const response1 = await fetch('/api/detect_devices');
+        const response1 = await fetch('/api/detect_devices', {
+            credentials: 'same-origin',  // Include cookies for session
+            method: 'GET'
+        });
+        
+        if (!response1.ok) {
+            // Handle authentication errors
+            if (response1.status === 401 || response1.status === 403) {
+                const errorText = await response1.text();
+                let errorMsg = 'Authentication required. Please refresh the page and log in again.';
+                try {
+                    const contentType = response1.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response1.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+                console.error('First API call failed (auth):', response1.status, errorMsg);
+                throw new Error(errorMsg);
+            }
+            const errorText = await response1.text();
+            console.error('First API call failed:', response1.status, errorText);
+            throw new Error(`Failed to get devices: ${response1.status} - ${errorText.substring(0, 100)}`);
+        }
+        
         const data1 = await response1.json();
+        console.log('First API call successful:', data1.success, 'Devices found:', data1.count || 0);
+        
+        if (!data1.success) {
+            throw new Error(data1.message || data1.error || 'Failed to detect devices');
+        }
         
         // Wait a bit and get again to ensure consistency
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        const response2 = await fetch('/api/detect_devices');
+        console.log('Fetching initial device list (second call)...');
+        const response2 = await fetch('/api/detect_devices', {
+            credentials: 'same-origin',  // Include cookies for session
+            method: 'GET'
+        });
+        
+        if (!response2.ok) {
+            // Handle authentication errors
+            if (response2.status === 401 || response2.status === 403) {
+                const errorText = await response2.text();
+                let errorMsg = 'Authentication required. Please refresh the page and log in again.';
+                try {
+                    const contentType = response2.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response2.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+                console.error('Second API call failed (auth):', response2.status, errorMsg);
+                throw new Error(errorMsg);
+            }
+            const errorText = await response2.text();
+            console.error('Second API call failed:', response2.status, errorText);
+            throw new Error(`Failed to get devices: ${response2.status} - ${errorText.substring(0, 100)}`);
+        }
+        
         const data2 = await response2.json();
+        console.log('Second API call successful:', data2.success, 'Devices found:', data2.count || 0);
         
         // Use the union of both device lists as baseline to be safe
         let baselineKeys = new Set();
+        const deviceDetails = [];
+        
         if (data1.success && data1.devices) {
-            data1.devices.forEach(d => baselineKeys.add(d.device_key));
+            console.log(`Processing ${data1.devices.length} devices from first call...`);
+            data1.devices.forEach(d => {
+                if (d.device_key) {
+                    baselineKeys.add(d.device_key);
+                    deviceDetails.push({key: d.device_key, name: d.name, type: d.type});
+                } else if (d.unique_id) {
+                    baselineKeys.add(d.unique_id);
+                    deviceDetails.push({key: d.unique_id, name: d.name, type: d.type});
+                } else if (d.vendor && d.product) {
+                    const fallbackKey = `${d.vendor}_${d.product}`;
+                    baselineKeys.add(fallbackKey);
+                    deviceDetails.push({key: fallbackKey, name: d.name, type: d.type});
+                }
+            });
         }
         if (data2.success && data2.devices) {
-            data2.devices.forEach(d => baselineKeys.add(d.device_key));
+            console.log(`Processing ${data2.devices.length} devices from second call...`);
+            data2.devices.forEach(d => {
+                if (d.device_key) {
+                    baselineKeys.add(d.device_key);
+                    if (!deviceDetails.find(dd => dd.key === d.device_key)) {
+                        deviceDetails.push({key: d.device_key, name: d.name, type: d.type});
+                    }
+                } else if (d.unique_id) {
+                    baselineKeys.add(d.unique_id);
+                    if (!deviceDetails.find(dd => dd.key === d.unique_id)) {
+                        deviceDetails.push({key: d.unique_id, name: d.name, type: d.type});
+                    }
+                } else if (d.vendor && d.product) {
+                    const fallbackKey = `${d.vendor}_${d.product}`;
+                    baselineKeys.add(fallbackKey);
+                    if (!deviceDetails.find(dd => dd.key === fallbackKey)) {
+                        deviceDetails.push({key: fallbackKey, name: d.name, type: d.type});
+                    }
+                }
+            });
         }
         
         previousDeviceKeys[pcTag] = baselineKeys;
-        console.log(`Baseline captured: ${baselineKeys.size} devices`);
+        console.log(`Baseline captured: ${baselineKeys.size} unique devices`);
+        console.log('Baseline device keys:', Array.from(baselineKeys));
+        console.log('Baseline device details:', deviceDetails);
         return baselineKeys;
     } catch (error) {
         console.error('Error getting initial devices:', error);
+        showModalStatus(pcTag, 'error', 'Failed to capture baseline. Please try again.');
         previousDeviceKeys[pcTag] = new Set();
         return new Set();
     }
@@ -2543,11 +3131,17 @@ async function openDetectModal(pcTag) {
     
     // Capture baseline of currently connected devices
     showModalStatus(pcTag, 'info', 'Capturing baseline... Please wait.');
-    const baselineKeys = await getInitialDevices(pcTag);
-    
-    // Start detecting for NEW devices
-    showModalStatus(pcTag, 'info', 'Baseline captured. Plug in a new device now...');
-    deviceDetectionIntervals[pcTag] = setInterval(() => checkForNewDevice(pcTag), 500);
+    console.log('Starting baseline capture...');
+    try {
+        const baselineKeys = await getInitialDevices(pcTag);
+        console.log(`Baseline captured successfully: ${baselineKeys.size} devices`);
+        showModalStatus(pcTag, 'info', `Baseline captured (${baselineKeys.size} devices). Plug in a new device now...`);
+        deviceDetectionIntervals[pcTag] = setInterval(() => checkForNewDevice(pcTag), 500);
+        console.log('Device detection started. Polling every 500ms...');
+    } catch (error) {
+        console.error('Error starting device detection:', error);
+        showModalStatus(pcTag, 'error', `Failed to start detection: ${error.message}`);
+    }
 }
 
 // Refresh device detection - recapture baseline and check immediately
@@ -2592,6 +3186,7 @@ async function showAllCurrentDevices(pcTag) {
                 deviceDiv.onclick = function() { selectDeviceFromList(pcTag, device); };
                 
                 const typeIcon = getDeviceIcon(device.type);
+                const vendorInfo = describeVendor(device.vendor, device.manufacturer);
                 deviceDiv.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <i class="${typeIcon}" style="font-size: 24px; color: #007bff;"></i>
@@ -2599,7 +3194,7 @@ async function showAllCurrentDevices(pcTag) {
                             <strong style="font-size: 16px;">${device.type || 'Unknown Device'}</strong><br>
                             <small style="color: #6c757d;">${device.name || 'No name available'}</small><br>
                             ${device.manufacturer ? `<small style="color: #6c757d;">Manufacturer: ${device.manufacturer}</small><br>` : ''}
-                            <small style="color: #6c757d;">VID: ${device.vendor || 'N/A'}, PID: ${device.product || 'N/A'}</small>
+                            <small style="color: #6c757d;">VID: ${vendorInfo.display || 'N/A'}, PID: ${device.product || 'N/A'}</small>
                         </div>
                         <i class="fas fa-chevron-right" style="color: #6c757d;"></i>
                     </div>
@@ -2678,48 +3273,162 @@ function closeDetectModal(pcTag) {
 
 // Check for new device - detects ONLY newly plugged devices
 async function checkForNewDevice(pcTag) {
+    if (detectionLock[pcTag]) {
+        return;
+    }
+    detectionLock[pcTag] = true;
     try {
-        // Ensure we have a baseline
         if (!previousDeviceKeys[pcTag] || previousDeviceKeys[pcTag].size === undefined) {
             await getInitialDevices(pcTag);
             return;
         }
+
+        const previousKeysArray = Array.from(previousDeviceKeys[pcTag] || []);
+        console.log(`Checking for new device. Baseline has ${previousKeysArray.length} devices.`);
+        console.log('Previous device keys:', previousKeysArray);
         
         const response = await fetch('/api/detect_new_device', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin',
             body: JSON.stringify({
-                previous_device_keys: Array.from(previousDeviceKeys[pcTag] || [])
+                previous_device_keys: previousKeysArray
             })
         });
-        
-        const data = await response.json();
-        
-        if (data.success && data.has_new_device && data.new_devices && data.new_devices.length > 0) {
-            // NEW device detected!
-            const newDevice = data.new_devices[0];
+
+        if (!response.ok) {
+            let errorMsg = `HTTP error! status: ${response.status}`;
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMsg = errorData.message || errorData.error || errorMsg;
+                } else {
+                    const text = await response.text();
+                    if (text.includes('login') || text.includes('redirect')) {
+                        errorMsg = 'Authentication required. Please refresh the page and try again.';
+                    } else if (text) {
+                        errorMsg = text.substring(0, 200);
+                    }
+                }
+            } catch (err) {
+                console.error('Error parsing error response:', err);
+            }
+            console.error('Detection API error:', response.status, errorMsg);
             
-            // Stop polling
+            // Handle authentication errors
+            if (response.status === 401 || response.status === 403) {
+                showModalStatus(pcTag, 'error', 'Your session has expired. Please refresh the page and log in again.');
+                if (deviceDetectionIntervals[pcTag]) {
+                    clearInterval(deviceDetectionIntervals[pcTag]);
+                    delete deviceDetectionIntervals[pcTag];
+                }
+                // Stop detection if authentication fails
+                return;
+            }
+            
+            showModalStatus(pcTag, 'error', `Error: ${errorMsg}`);
             if (deviceDetectionIntervals[pcTag]) {
                 clearInterval(deviceDetectionIntervals[pcTag]);
                 delete deviceDetectionIntervals[pcTag];
             }
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Detection API response:', {
+            success: data.success,
+            has_new_device: data.has_new_device,
+            new_devices_count: data.new_devices ? data.new_devices.length : 0,
+            current_keys_count: data.current_device_keys ? data.current_device_keys.length : 0,
+            previous_keys_count: previousKeysArray.length
+        });
+        
+        if (!data.success) {
+            const errorMsg = data.message || data.error || 'Unknown error occurred';
+            console.error('Detection API error:', data.error || data.message);
+            if (data.error && (data.error.includes('Windows') || data.error.includes('Not Windows'))) {
+                showModalStatus(pcTag, 'error', 'Device detection requires Windows. This feature is only available on Windows.');
+            } else if (data.error && (data.error.includes('authenticated') || data.error.includes('Access denied'))) {
+                showModalStatus(pcTag, 'error', 'Authentication error. Please refresh the page and try again.');
+            } else {
+                showModalStatus(pcTag, 'error', `Error: ${errorMsg}`);
+            }
+            if (deviceDetectionIntervals[pcTag]) {
+                clearInterval(deviceDetectionIntervals[pcTag]);
+                delete deviceDetectionIntervals[pcTag];
+            }
+            return;
+        }
+
+        // Log detection status
+        console.log('Current device keys from API:', data.current_device_keys || []);
+        console.log('Previous device keys sent:', previousKeysArray);
+        
+        if (data.has_new_device) {
+            console.log('✅ has_new_device is TRUE');
+            if (data.new_devices && data.new_devices.length > 0) {
+                console.log('✅ New devices found:', data.new_devices);
+                data.new_devices.forEach((dev, idx) => {
+                    console.log(`  Device ${idx + 1}:`, {
+                        device_key: dev.device_key,
+                        unique_id: dev.unique_id,
+                        name: dev.name,
+                        type: dev.type,
+                        vendor: dev.vendor,
+                        product: dev.product
+                    });
+                });
+            } else {
+                console.warn('⚠️ has_new_device is true but new_devices is empty or missing');
+            }
+        } else {
+            console.log('⏳ has_new_device is FALSE - no new device detected yet');
+            if (data.current_device_keys) {
+                const currentSet = new Set(data.current_device_keys);
+                const previousSet = new Set(previousKeysArray);
+                const diff = Array.from(currentSet).filter(k => !previousSet.has(k));
+                if (diff.length > 0) {
+                    console.log('⚠️ Found keys in current that are not in previous:', diff);
+                }
+            }
+        }
+
+        if (data.has_new_device && data.new_devices && data.new_devices.length > 0) {
+            const newDevice = data.new_devices[0];
+            console.log('New device detected:', newDevice);
+            console.log('Device details:', {
+                type: newDevice.type,
+                name: newDevice.name,
+                vendor: newDevice.vendor,
+                product: newDevice.product,
+                unique_id: newDevice.unique_id,
+                device_key: newDevice.device_key,
+                serial_number: newDevice.serial_number || '(not provided)'
+            });
+            // Serial number logging removed to reduce console clutter
             
-            // Update baseline to include the new device
+            if (deviceDetectionIntervals[pcTag]) {
+                clearInterval(deviceDetectionIntervals[pcTag]);
+                delete deviceDetectionIntervals[pcTag];
+            }
             if (data.current_device_keys) {
                 previousDeviceKeys[pcTag] = new Set(data.current_device_keys);
+                console.log(`Updated baseline: ${data.current_device_keys.length} devices`);
             }
-            
-            // Store and show the new device in modal for editing
             detectedDevices[pcTag] = newDevice;
+            console.log('Calling showDeviceDataInModal...');
             showDeviceDataInModal(pcTag, newDevice);
-            
-            showModalStatus(pcTag, 'success', 'New device detected! Review and edit the information, then click "Add Device" to add it to the table.');
+            showModalStatus(pcTag, 'success', 'New device detected! Review and edit the information, then click "Add Device".');
+        } else if (data.has_new_device && (!data.new_devices || data.new_devices.length === 0)) {
+            console.warn('API says has_new_device=true but no devices in new_devices array');
         }
     } catch (error) {
         console.error('Error checking for new device:', error);
+        const message = error.message || 'Unknown error occurred';
+        showModalStatus(pcTag, 'error', `Error: ${message}`);
+    } finally {
+        detectionLock[pcTag] = false;
     }
 }
 
@@ -2733,76 +3442,182 @@ function showDeviceDataInModal(pcTag, device) {
     dataState.classList.add('active');
     dataState.style.display = 'block';
     
-    // Map device type to form options
+    // Map device type from backend to form dropdown options
     const typeMap = {
         'Keyboard': 'Keyboard',
         'Mouse': 'Mouse',
         'Flash Drive': 'FlashDrive',
+        'FlashDrive': 'FlashDrive',  // Handle both variants
         'Printer': 'Printer',
         'Camera / Scanner': 'Scanner',
-        'Audio Device': 'Headphones'
+        'Camera': 'Webcam',  // Map camera to Webcam
+        'Scanner': 'Scanner',
+        'Audio Device': 'Headphones',
+        'Headphones': 'Headphones',  // Handle direct mapping
+        'Headset': 'Headphones',
+        'Monitor': 'Monitor',
+        'Webcam': 'Webcam'
     };
     
     // Populate editable fields
     const typeSelect = document.getElementById(`modal-device-type-${pcTag}`);
-    const mappedType = typeMap[device.type] || device.type;
     if (typeSelect) {
+        // Try to find the mapped type
+        let mappedType = typeMap[device.type] || device.type;
+        let found = false;
+        
+        // First try exact match with mapped type
         for (let option of typeSelect.options) {
-            if (option.value.toLowerCase() === mappedType.toLowerCase()) {
+            if (option.value && option.value.toLowerCase() === mappedType.toLowerCase()) {
                 typeSelect.value = option.value;
+                found = true;
+                console.log(`Device type set to: ${option.value} (from backend type: ${device.type})`);
                 break;
             }
         }
-    }
-    
-    // Brand/Model Name (editable, auto-filled with device name)
-    const nameInput = document.getElementById(`modal-device-name-${pcTag}`);
-    if (nameInput) {
-        // Extract brand/model from device name (remove common prefixes)
-        let deviceName = device.name || '';
-        // Remove "HID-compliant", "USB", etc. prefixes
-        deviceName = deviceName.replace(/^(HID-compliant|USB)\s*/i, '').trim();
-        nameInput.value = deviceName || device.name || '';
-    }
-    
-    // Serial Number (editable, auto-filled - improved logic)
-    const serialInput = document.getElementById(`modal-device-serial-${pcTag}`);
-    if (serialInput) {
-        let serialNumber = '';
         
-        // Priority 1: Extract from unique_id (remove VID_PID_INST prefix if present)
-        if (device.unique_id && device.unique_id !== '-') {
-            // If unique_id contains VID_PID_INST format, try to extract instance part
-            const instMatch = device.unique_id.match(/INST[_\s]*([^\s]+)/i);
-            if (instMatch && instMatch[1] && instMatch[1].length > 4) {
-                serialNumber = instMatch[1].replace(/[&_]/g, '').substring(0, 20); // Clean and limit length
-            } else {
-                // Use the unique_id as-is, but clean it up
-                serialNumber = device.unique_id.replace(/VID_[^_]*_PID_[^_]*_INST[_\s]*/i, '').trim();
-                if (!serialNumber || serialNumber.length < 3) {
-                    serialNumber = device.unique_id; // Fallback to full unique_id
+        // If not found, try fuzzy matching with device type
+        if (!found && device.type) {
+            const deviceTypeLower = device.type.toLowerCase();
+            for (let option of typeSelect.options) {
+                if (option.value) {
+                    const optionLower = option.value.toLowerCase();
+                    // Check if device type contains option value or vice versa
+                    if (deviceTypeLower.includes(optionLower) || optionLower.includes(deviceTypeLower)) {
+                        typeSelect.value = option.value;
+                        found = true;
+                        console.log(`Device type set to: ${option.value} (fuzzy match from backend type: ${device.type})`);
+                        break;
+                    }
                 }
             }
         }
         
-        // Priority 2: Use VID_PID format if no good serial found
-        if (!serialNumber || serialNumber.length < 3) {
-            if (device.vendor && device.vendor !== 'UNKNOWN' && device.product && device.product !== 'UNKNOWN') {
-                serialNumber = `${device.vendor}-${device.product}`;
+        // If still not found, try to infer from device name or vendor
+        if (!found) {
+            const deviceNameLower = (device.name || '').toLowerCase();
+            const vendorId = (device.vendor || '').toUpperCase();
+            
+            // For composite devices, check if we can infer type
+            if (deviceNameLower.includes('composite')) {
+                // Composite devices from Logitech are often keyboard/mouse combos
+                if (vendorId === '046D' && deviceNameLower.includes('composite')) {
+                    // Check if there's a HID keyboard device in the same batch
+                    // For now, default to Keyboard for Logitech composite devices
+                    for (let option of typeSelect.options) {
+                        if (option.value === 'Keyboard') {
+                            typeSelect.value = 'Keyboard';
+                            found = true;
+                            console.log(`Inferred device type as Keyboard (Logitech composite device)`);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!found) {
+                console.warn(`Could not map device type "${device.type}" to form options. Leaving unselected.`);
+                // Default to first option (empty) - user will select manually
+            }
+        }
+    } else {
+        console.error(`Device type select element not found: modal-device-type-${pcTag}`);
+    }
+    
+    // Brand/Model Name (editable, auto-filled with friendly vendor name)
+    const nameInput = document.getElementById(`modal-device-name-${pcTag}`);
+    if (nameInput) {
+        // Get friendly vendor name (e.g., "Logitech" instead of "046D")
+        let brandName = '';
+        const rawVendorId = (device.vendor || '').toUpperCase();
+        
+        // Priority 1: Check vendor ID directly in friendly names map
+        if (rawVendorId && VENDOR_FRIENDLY_NAMES[rawVendorId]) {
+            brandName = VENDOR_FRIENDLY_NAMES[rawVendorId];
+        } else {
+            // Priority 2: Use describeVendor to get friendly name
+            const vendorInfo = describeVendor(device.vendor, device.manufacturer);
+            if (vendorInfo.display && vendorInfo.display !== vendorInfo.id) {
+                // Extract just the friendly name (remove the ID part if present)
+                brandName = vendorInfo.display.replace(/\s*\([^)]+\)$/, '').trim(); // Remove "(046D)" part
+            } else if (device.manufacturer && device.manufacturer.toLowerCase() !== 'composite device') {
+                // Priority 3: Use manufacturer if available and not generic
+                brandName = device.manufacturer;
+            } else {
+                // Priority 4: Skip generic names like "Composite Device"
+                let deviceName = device.name || '';
+                if (deviceName.toLowerCase().includes('composite device') || 
+                    deviceName.toLowerCase().includes('hid-compliant') ||
+                    deviceName.toLowerCase().includes('usb')) {
+                    // If device name is generic, prefer manufacturer or vendor ID
+                    if (device.manufacturer) {
+                        brandName = device.manufacturer;
+                    } else if (rawVendorId) {
+                        // Use vendor ID as last resort if no friendly name found
+                        brandName = rawVendorId;
+                    } else {
+                        brandName = deviceName.replace(/^(HID-compliant|USB|Composite Device)\s*/i, '').trim() || '';
+                    }
+                } else {
+                    // Extract brand/model from device name (remove common prefixes)
+                    deviceName = deviceName.replace(/^(HID-compliant|USB)\s*/i, '').trim();
+                    brandName = deviceName || device.name || '';
+                }
             }
         }
         
-        // Priority 3: Extract from device name (look for numbers/patterns)
+        nameInput.value = brandName || 'Unknown';
+    }
+    
+    // Serial Number (editable, auto-filled - use actual serial number from Windows SetupAPI)
+    const serialInput = document.getElementById(`modal-device-serial-${pcTag}`);
+    if (serialInput) {
+        let serialNumber = '';
+        
+        // Priority 1: Use actual serial number from Windows SetupAPI if available
+        if (device.serial_number && device.serial_number.trim() && device.serial_number !== '-') {
+            serialNumber = device.serial_number.trim();
+        }
+        
+        // Priority 2: Extract from unique_id (remove VID_PID_INST prefix if present) - fallback only
+        if (!serialNumber || serialNumber.length < 3) {
+            if (device.unique_id && device.unique_id !== '-') {
+                // If unique_id contains VID_PID_INST format, try to extract instance part
+                const instMatch = device.unique_id.match(/INST[_\s]*([^\s]+)/i);
+                if (instMatch && instMatch[1] && instMatch[1].length > 4) {
+                    serialNumber = instMatch[1].replace(/[&_]/g, '').substring(0, 20); // Clean and limit length
+                    console.log(`Extracted serial from unique_id instance: ${serialNumber}`);
+                } else {
+                    // Use the unique_id as-is, but clean it up
+                    serialNumber = device.unique_id.replace(/VID_[^_]*_PID_[^_]*_INST[_\s]*/i, '').trim();
+                    if (!serialNumber || serialNumber.length < 3) {
+                        serialNumber = device.unique_id; // Fallback to full unique_id
+                    }
+                }
+            }
+        }
+        
+        // Priority 3: Use VID_PID format if no good serial found
+        if (!serialNumber || serialNumber.length < 3) {
+            if (device.vendor && device.vendor !== 'UNKNOWN' && device.product && device.product !== 'UNKNOWN') {
+                serialNumber = `${device.vendor}-${device.product}`;
+                console.log(`Using VID_PID as serial: ${serialNumber}`);
+            }
+        }
+        
+        // Priority 4: Extract from device name (look for numbers/patterns)
         if (!serialNumber || serialNumber.length < 3) {
             const nameMatch = (device.name || '').match(/([A-Z0-9]{4,})/);
             if (nameMatch) {
                 serialNumber = nameMatch[1];
+                console.log(`Extracted serial from device name: ${serialNumber}`);
             }
         }
         
-        // Priority 4: Use device name as last resort
+        // Priority 5: Use device name as last resort
         if (!serialNumber) {
             serialNumber = (device.name || '').substring(0, 30);
+            console.log(`Using device name as serial: ${serialNumber}`);
         }
         
         serialInput.value = serialNumber;
@@ -2815,7 +3630,32 @@ function showDeviceDataInModal(pcTag, device) {
     const vendorInput = document.getElementById(`modal-device-vendor-${pcTag}`);
     const productInput = document.getElementById(`modal-device-product-${pcTag}`);
     if (vendorInput) {
-        vendorInput.value = device.vendor || '';
+        const vendorInfo = describeVendor(device.vendor, device.manufacturer);
+        // Store raw vendor ID in dataset for API calls
+        vendorInput.dataset.vendorId = vendorInfo.id;
+        // Display ONLY the raw vendor ID in the field (e.g., "046D")
+        vendorInput.value = vendorInfo.id || '';
+        vendorInput.title = vendorInfo.display || vendorInfo.id || '';
+
+        // Show friendly name as hint below the vendor ID field
+        const friendlyNoteId = `modal-device-vendor-friendly-${pcTag}`;
+        let friendlyNote = document.getElementById(friendlyNoteId);
+        if (!friendlyNote) {
+            friendlyNote = document.createElement('div');
+            friendlyNote.id = friendlyNoteId;
+            friendlyNote.style.fontSize = '12px';
+            friendlyNote.style.color = '#6c757d';
+            friendlyNote.style.marginTop = '4px';
+            friendlyNote.style.fontStyle = 'italic';
+            vendorInput.parentElement.appendChild(friendlyNote);
+        }
+        // Show friendly name hint if available (e.g., "Detected as: Logitech")
+        if (vendorInfo.display && vendorInfo.display !== vendorInfo.id && VENDOR_FRIENDLY_NAMES[vendorInfo.id]) {
+            const friendlyName = VENDOR_FRIENDLY_NAMES[vendorInfo.id];
+            friendlyNote.textContent = `Detected as: ${friendlyName}`;
+        } else {
+            friendlyNote.textContent = '';
+        }
     }
     if (productInput) {
         productInput.value = device.product || '';
@@ -2849,23 +3689,52 @@ async function addDetectedDeviceDirectly(pcTag, device) {
         
         const deviceType = typeMap[device.type] || device.type || 'Mouse';
         
-        // Extract brand/model from device name
-        let deviceName = device.name || '';
-        deviceName = deviceName.replace(/^(HID-compliant|USB)\s*/i, '').trim();
-        const brandModel = deviceName || device.name || deviceType;
+        // Use friendly vendor name for brand (e.g., "Logitech" instead of "046D")
+        let brandModel = '';
+        if (device.vendor) {
+            const vendorInfo = describeVendor(device.vendor, device.manufacturer);
+            if (vendorInfo.display && vendorInfo.display !== vendorInfo.id) {
+                // Extract just the friendly name (remove the ID part if present)
+                brandModel = vendorInfo.display.replace(/\s*\([^)]+\)$/, '').trim(); // Remove "(046D)" part
+            } else if (vendorInfo.id && VENDOR_FRIENDLY_NAMES[vendorInfo.id]) {
+                brandModel = VENDOR_FRIENDLY_NAMES[vendorInfo.id];
+            } else if (device.manufacturer) {
+                brandModel = device.manufacturer;
+            }
+        }
         
-        // Extract serial number from unique_id
-        // Example: VID_046D_PID_C547_INST_6_3474EE3_0_2 -> extract "63474EE302"
-        // The serial is typically the alphanumeric part after INST, with underscores removed
+        // Fallback: Extract brand/model from device name if no vendor name
+        if (!brandModel || brandModel.trim() === '') {
+            let deviceName = device.name || '';
+            deviceName = deviceName.replace(/^(HID-compliant|USB|Composite Device)\s*/i, '').trim();
+            brandModel = deviceName || device.name || deviceType || 'Unknown Device';
+        }
+        
+        // Ensure brandModel is not empty
+        if (!brandModel || brandModel.trim() === '') {
+            brandModel = 'Unknown Device';
+        }
+        
+        // Extract serial number - Priority 1: Use actual serial number from Windows SetupAPI
         let serialNumber = '';
-        if (device.unique_id && device.unique_id !== '-') {
-            // Match INST followed by numbers/letters (the instance identifier)
-            // Format: INST_6_3474EE3_0_2 -> extract "63474EE302"
-            const instMatch = device.unique_id.match(/INST[_\s]+([^\s]+)/i);
-            if (instMatch && instMatch[1]) {
-                const instPart = instMatch[1]; // e.g., "6_3474EE3_0_2"
-                // Remove all underscores and spaces to get serial: "63474EE302"
-                serialNumber = instPart.replace(/[_\s]/g, '');
+        
+        // Priority 1: Use actual serial number from Windows SetupAPI if available
+        if (device.serial_number && device.serial_number.trim() && device.serial_number !== '-') {
+            serialNumber = device.serial_number.trim();
+        }
+        
+        // Priority 2: Extract from unique_id (fallback only)
+        if (!serialNumber || serialNumber.length < 3) {
+            if (device.unique_id && device.unique_id !== '-') {
+                // Match INST followed by numbers/letters (the instance identifier)
+                // Format: INST_6_3474EE3_0_2 -> extract "63474EE302"
+                const instMatch = device.unique_id.match(/INST[_\s]+([^\s]+)/i);
+                if (instMatch && instMatch[1]) {
+                    const instPart = instMatch[1]; // e.g., "6_3474EE3_0_2"
+                    // Remove all underscores and spaces to get serial: "63474EE302"
+                    serialNumber = instPart.replace(/[_\s]/g, '');
+                    console.log(`Extracted serial from unique_id instance: ${serialNumber}`);
+                }
             }
             
             // If extraction failed, try alternative methods
@@ -2881,23 +3750,42 @@ async function addDetectedDeviceDirectly(pcTag, device) {
                 }
             }
             
-            // Final fallback
+            // Final fallback - ensure we always have a serial number
             if (!serialNumber || serialNumber.length < 4) {
                 if (device.vendor && device.vendor !== 'UNKNOWN' && device.product && device.product !== 'UNKNOWN') {
                     serialNumber = `${device.vendor}${device.product}`;
-                } else {
+                } else if (device.unique_id && device.unique_id.length > 0) {
                     // Use last part of unique_id as fallback
                     const parts = device.unique_id.split('_');
-                    serialNumber = parts[parts.length - 1] || device.unique_id.substring(device.unique_id.length - 12);
+                    serialNumber = parts[parts.length - 1] || device.unique_id.substring(Math.max(0, device.unique_id.length - 12));
+                } else {
+                    // Absolute fallback - use timestamp-based ID
+                    serialNumber = `AUTO_${Date.now().toString(36).toUpperCase()}`;
                 }
             }
+        }
+        
+        // Ensure serialNumber is not empty
+        if (!serialNumber || serialNumber.trim() === '') {
+            serialNumber = `AUTO_${Date.now().toString(36).toUpperCase()}`;
         }
         
         // Keep the full unique_id as-is (VID_PID_INST format)
         const uniqueId = device.unique_id || '';
         
+        // Validate required fields before sending
+        if (!deviceType || !brandModel || !serialNumber) {
+            console.error('Missing required fields:', {
+                deviceType: deviceType || 'MISSING',
+                brandModel: brandModel || 'MISSING',
+                serialNumber: serialNumber || 'MISSING'
+            });
+            showModalStatus(pcTag, 'error', `Cannot add device: Missing required information. Device Type: ${deviceType || 'N/A'}, Brand: ${brandModel || 'N/A'}, Serial: ${serialNumber || 'N/A'}`);
+            return;
+        }
+        
         // Add device directly via API
-        const comlabId = {{ comlab_id }};
+        const comlabId = Number(document.body.dataset.comlabId || 0);
         const response = await fetch(`/comlab/${comlabId}/add_peripheral`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -2912,6 +3800,31 @@ async function addDetectedDeviceDirectly(pcTag, device) {
                 remarks: ''
             })
         });
+        
+        // Handle non-OK responses
+        if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            let errorMessage = `Server error (${response.status})`;
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    if (errorData.missing_fields) {
+                        errorMessage += ` - Missing: ${errorData.missing_fields.join(', ')}`;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                }
+            } else {
+                const text = await response.text();
+                console.error('Non-JSON error response:', text.substring(0, 200));
+            }
+            
+            console.error('Failed to add device:', errorMessage);
+            showModalStatus(pcTag, 'error', `Failed to add device: ${errorMessage}`);
+            return;
+        }
         
         const result = await response.json();
         
@@ -2988,7 +3901,8 @@ function addDetectedDevice(pcTag) {
     const brandModel = nameInput.value.trim();
     const serialNumber = serialInput.value.trim();
     const uniqueId = document.getElementById(`modal-device-unique-id-${pcTag}`)?.textContent.trim() || '';
-    const vendorId = document.getElementById(`modal-device-vendor-${pcTag}`)?.value.trim() || '';
+    const vendorInputElement = document.getElementById(`modal-device-vendor-${pcTag}`);
+    const vendorId = vendorInputElement?.dataset?.vendorId?.trim() || vendorInputElement?.value.trim() || '';
     const productId = document.getElementById(`modal-device-product-${pcTag}`)?.value.trim() || '';
     
     // Add device directly to table (not to manual form fields)
@@ -3050,25 +3964,26 @@ window.addEventListener('click', function(event) {
 let statusCheckIntervals = {};
 
 function startStatusMonitoring(pcTag, labId) {
-    // Check every 3 seconds for disconnected devices
+    // Prevent multiple intervals - if already running, don't start another
     if (statusCheckIntervals[pcTag]) {
-        clearInterval(statusCheckIntervals[pcTag]);
+        return;
     }
     
     // Initial refresh immediately
     refreshPeripheralStatuses(pcTag, labId);
     
     let refreshCounter = 0;
-    // Check for disconnected devices every 3 seconds
+    // Check for disconnected devices every 10 seconds (reduced frequency to avoid rate limits)
+    // This gives us ~6 requests per minute, well under the 200/minute limit
     statusCheckIntervals[pcTag] = setInterval(() => {
         checkDisconnectedDevices(pcTag, labId);
         refreshCounter++;
-        // Refresh all statuses every 10 seconds (every 3rd interval)
+        // Refresh all statuses every 30 seconds (every 3rd interval)
         if (refreshCounter >= 3) {
             refreshPeripheralStatuses(pcTag, labId);
             refreshCounter = 0;
         }
-    }, 3000);
+    }, 10000); // Changed from 3000ms to 10000ms (10 seconds)
 }
 
 function stopStatusMonitoring(pcTag) {
@@ -3079,8 +3994,13 @@ function stopStatusMonitoring(pcTag) {
 }
 
 async function checkDisconnectedDevices(pcTag, labId) {
+    if (disconnectionLock[pcTag]) {
+        return;
+    }
+    disconnectionLock[pcTag] = true;
     try {
         const response = await fetch('/api/check_disconnected_devices', {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3090,6 +4010,38 @@ async function checkDisconnectedDevices(pcTag, labId) {
                 lab_id: labId
             })
         });
+        
+        // Handle non-JSON responses (e.g., HTML error pages from rate limiting)
+        if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
+                console.warn(`API error (${response.status}):`, errorData.message || errorData.error);
+            } else {
+                const text = await response.text();
+                console.warn(`API returned non-JSON response (${response.status}):`, text.substring(0, 200));
+                
+                // If it's a rate limit error, stop monitoring temporarily
+                if (response.status === 429) {
+                    console.warn('Rate limit hit - temporarily stopping status monitoring');
+                    stopStatusMonitoring(pcTag);
+                    // Restart after 60 seconds
+                    setTimeout(() => {
+                        console.log('Restarting status monitoring after rate limit cooldown');
+                        startStatusMonitoring(pcTag, labId);
+                    }, 60000);
+                }
+            }
+            return; // Exit early on error
+        }
+        
+        // Parse JSON only if response is OK
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.warn('Response is not JSON:', text.substring(0, 200));
+            return;
+        }
         
         const data = await response.json();
         
@@ -3120,13 +4072,12 @@ async function checkDisconnectedDevices(pcTag, labId) {
                 });
             }
             
-            // Log updates if any
-            if (data.disconnected_count > 0 || data.reconnected_count > 0) {
-                console.log(`Status updated: ${data.disconnected_count} unplugged, ${data.reconnected_count} connected.`);
-            }
+            // Status updates are handled silently to reduce console clutter
         }
     } catch (error) {
         console.error('Error checking device status:', error);
+    } finally {
+        disconnectionLock[pcTag] = false;
     }
 }
 
@@ -3650,25 +4601,112 @@ function deletePCDevice(deviceId, pcTag) {
 
 // Add Device Modal Functions
 function openAddDeviceModal() {
-    const comlabId = {{ comlab_id }};
-    fetch(`/generate_link?comlab_id=${comlabId}`)
-        .then(res => res.json())
+    console.log('openAddDeviceModal called');
+    const comlabId = Number(document.body.dataset.comlabId || 0);
+    console.log('comlabId:', comlabId);
+    
+    // Show loading state immediately
+    const modalElement = document.getElementById('addDeviceModal');
+    console.log('Modal element:', modalElement);
+    if (!modalElement) {
+        console.error('addDeviceModal element not found!');
+        alert('Error: Modal element not found. Please refresh the page.');
+        return;
+    }
+    
+    // Show modal immediately
+    modalElement.style.display = 'flex';
+    modalElement.classList.add('active');
+    modalElement.setAttribute('aria-hidden', 'false');
+    console.log('Modal activated');
+    
+    const linkInput = document.getElementById('deviceLink');
+    if (linkInput) {
+        linkInput.value = 'Generating link...';
+    } else {
+        console.warn('deviceLink input not found');
+    }
+    
+    fetch(`/generate_link?comlab_id=${comlabId}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(async res => {
+            // Check if response is OK
+            if (!res.ok) {
+                const contentType = res.headers.get('content-type');
+                let errorMessage = `Server error (${res.status})`;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        const errorData = await res.json();
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    } catch (e) {
+                        console.error('Failed to parse error response:', e);
+                    }
+                } else {
+                    const text = await res.text();
+                    console.error('Non-JSON error response:', text.substring(0, 200));
+                    if (res.status === 401 || res.status === 403) {
+                        errorMessage = 'Authentication required. Please log in again.';
+                    } else if (res.status === 404) {
+                        errorMessage = 'Endpoint not found. Please check the server configuration.';
+                    } else if (res.status === 500) {
+                        errorMessage = 'Server error. Please contact the administrator.';
+                    }
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
+            // Parse JSON response
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await res.text();
+                console.error('Response is not JSON:', text.substring(0, 200));
+                throw new Error('Invalid response format from server.');
+            }
+            
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
-                document.getElementById('deviceLink').value = data.link;
-                document.getElementById('addDeviceModal').style.display = 'flex';
+                const linkInput = document.getElementById('deviceLink');
+                if (linkInput) {
+                    linkInput.value = data.link;
+                }
+                modalElement.classList.add('active');
+                modalElement.setAttribute('aria-hidden', 'false');
             } else {
-                alert('Failed to generate link. Please try again.');
+                const errorMsg = data.message || data.error || 'Failed to generate link. Please try again.';
+                alert(errorMsg);
+                // Close modal if it was opened
+                modalElement.classList.remove('active');
+                modalElement.setAttribute('aria-hidden', 'true');
+                modalElement.style.display = 'none';
             }
         })
         .catch(err => {
-            console.error(err);
-            alert('Error generating link. Please try again.');
+            console.error('Error generating link:', err);
+            const errorMsg = err.message || 'Error generating link. Please try again.';
+            alert(errorMsg);
+            // Close modal if it was opened
+            modalElement.classList.remove('active');
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.style.display = 'none';
         });
 }
 
 function closeAddDeviceModal() {
-    document.getElementById('addDeviceModal').style.display = 'none';
+    const modalElement = document.getElementById('addDeviceModal');
+    if (modalElement) {
+        modalElement.classList.remove('active');
+        modalElement.setAttribute('aria-hidden', 'true');
+        modalElement.style.display = 'none';
+    }
 }
 
 function copyLink() {
@@ -3712,80 +4750,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Stop monitoring when page unloads
 window.addEventListener('beforeunload', function() {
-    {% if devices %}
-    {% for pc in devices %}
-    stopStatusMonitoring('{{ pc.tag }}');
-    {% endfor %}
-    {% endif %}
+    (deviceDetailsData || []).forEach(device => {
+        if (device?.tag) {
+            stopStatusMonitoring(device.tag);
+        }
+    });
 });
 
 // Status Management Functions
-let currentStatusPeripheralId = null;
-
-function openStatusModal(peripheralId, currentStatus) {
-    currentStatusPeripheralId = peripheralId;
-    const modal = document.getElementById('statusModal');
-    const statusSelect = document.getElementById('statusSelect');
-    statusSelect.value = currentStatus.toLowerCase();
-    document.getElementById('statusReason').value = '';
-    modal.style.display = 'flex';
-}
-
-function closeStatusModal() {
-    document.getElementById('statusModal').style.display = 'none';
-    currentStatusPeripheralId = null;
-}
-
-function saveStatusChange() {
-    if (!currentStatusPeripheralId) return;
-    
-    const newStatus = document.getElementById('statusSelect').value;
-    const reason = document.getElementById('statusReason').value;
-    
-    fetch('/api/update_peripheral_status', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            peripheral_id: currentStatusPeripheralId,
-            status: newStatus,
-            reason: reason
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            // Update status in table
-            const row = document.getElementById(`peripheral-${currentStatusPeripheralId}`);
-            if (row) {
-                const statusCell = row.querySelector('td:nth-child(7)');
-                if (statusCell) {
-                    const statusPill = statusCell.querySelector('.status-pill');
-                    if (statusPill) {
-                        statusPill.className = `status-pill status-${newStatus}`;
-                        statusPill.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                    }
-                }
-            }
-            closeStatusModal();
-            alert('Status updated successfully!');
-            // Refresh the page to show updated status
-            location.reload();
-        } else {
-            alert('Error: ' + (data.message || 'Failed to update status'));
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alert('Error updating status. Please try again.');
-    });
-}
-
-// Close status modal when clicking outside
-document.getElementById('statusModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeStatusModal();
-    }
-});
 </script>
 
 <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>

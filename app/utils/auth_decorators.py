@@ -34,11 +34,20 @@ def user_required(f):
     """Decorator to require user or professor role"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Check if this is an API request (JSON expected)
+        is_api_request = request.path.startswith('/api/') or request.is_json or 'application/json' in request.headers.get('Accept', '')
+        
         if "username" not in session:
+            if is_api_request:
+                from flask import jsonify
+                return jsonify({"success": False, "error": "Authentication required", "message": "Please log in to access this endpoint."}), 401
             flash("Please log in to access this page.", "error")
             return redirect(url_for("auth.login"))
         role = session.get("role")
-        if role not in ["user", "professor"]:
+        if role not in ["user", "professor", "admin"]:  # Allow admin too for device detection
+            if is_api_request:
+                from flask import jsonify
+                return jsonify({"success": False, "error": "Access denied", "message": "User privileges required."}), 403
             flash("Access denied. User privileges required.", "error")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)

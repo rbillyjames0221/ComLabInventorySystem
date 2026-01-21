@@ -7,7 +7,7 @@ class Device:
     """Device model"""
     
     @staticmethod
-    def create(tag, location, hostname, ip_address, comlab_id, unique_id=None, mac_address=None):
+    def create(tag, location, hostname, ip_address, comlab_id, unique_id=None, mac_address=None, machine_id=None):
         """Create a new device"""
         from app.utils.helpers import get_current_timestamp
         created_at = get_current_timestamp()
@@ -34,6 +34,14 @@ class Device:
                 except sqlite3.OperationalError:
                     pass  # Column might already exist
             
+            # Add machine_id column if it doesn't exist
+            if "machine_id" not in columns:
+                try:
+                    conn.execute("ALTER TABLE devices ADD COLUMN machine_id TEXT")
+                    conn.commit()
+                except sqlite3.OperationalError:
+                    pass  # Column might already exist
+            
             # Use correct column name (handle typo in schema)
             ip_column = "ip_addres" if "ip_addres" in columns else "ip_address"
             created_column = "created_a" if "created_a" in columns else "created_at"
@@ -45,27 +53,29 @@ class Device:
             # Build insert query dynamically
             has_mac = "mac_address" in columns
             has_unique = "unique_id" in columns
+            has_machine = "machine_id" in columns
+            has_machine = "machine_id" in columns
             
-            if has_mac and has_unique:
-                conn.execute(f"""
-                    INSERT INTO devices (tag, location, hostname, {ip_column}, {created_column}, comlab_id, mac_address, unique_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (tag, location, hostname, ip_address, created_at, comlab_id, mac_address, unique_id))
-            elif has_unique:
-                conn.execute(f"""
-                    INSERT INTO devices (tag, location, hostname, {ip_column}, {created_column}, comlab_id, unique_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (tag, location, hostname, ip_address, created_at, comlab_id, unique_id))
-            elif has_mac:
-                conn.execute(f"""
-                    INSERT INTO devices (tag, location, hostname, {ip_column}, {created_column}, comlab_id, mac_address)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (tag, location, hostname, ip_address, created_at, comlab_id, mac_address))
-            else:
-                conn.execute(f"""
-                    INSERT INTO devices (tag, location, hostname, {ip_column}, {created_column}, comlab_id)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (tag, location, hostname, ip_address, created_at, comlab_id))
+            insert_fields = ["tag", "location", "hostname", ip_column, created_column, "comlab_id"]
+            values = [tag, location, hostname, ip_address, created_at, comlab_id]
+
+            if has_mac:
+                insert_fields.append("mac_address")
+                values.append(mac_address)
+
+            if has_unique:
+                insert_fields.append("unique_id")
+                values.append(unique_id)
+
+            if has_machine:
+                insert_fields.append("machine_id")
+                values.append(machine_id)
+
+            placeholders = ", ".join(["?"] * len(insert_fields))
+            conn.execute(
+                f"INSERT INTO devices ({', '.join(insert_fields)}) VALUES ({placeholders})",
+                values
+            )
             conn.commit()
     
     @staticmethod
@@ -108,6 +118,9 @@ class Device:
                 select_fields.append("mac_address")
             if has_unique:
                 select_fields.append("unique_id")
+            has_machine = "machine_id" in columns
+            if has_machine:
+                select_fields.append("machine_id")
             
             query = f"SELECT {', '.join(select_fields)} FROM devices WHERE comlab_id = ?"
             cur.execute(query, (location,))

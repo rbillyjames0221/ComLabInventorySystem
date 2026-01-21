@@ -5,6 +5,8 @@ This module uses native Windows APIs for faster and more reliable device detecti
 - SetupDiGetDeviceRegistryProperty: Get device properties (name, manufacturer, etc.)
 - SetupDiGetDeviceInstanceId: Get device instance ID (VID/PID)
 Compatible with Windows 7/8/10/11.
+
+Enhanced with robust built-in device filtering and comprehensive device type detection.
 """
 import sys
 import os
@@ -45,6 +47,7 @@ SPDRP_CLASS = 0x00000007
 SPDRP_CLASSGUID = 0x00000008
 SPDRP_ENUMERATOR_NAME = 0x00000016
 SPDRP_PHYSICAL_DEVICE_OBJECT_NAME = 0x0000000E
+SPDRP_SERIALNUMBER = 0x00000010  # Device serial number (0x10 in hex)
 
 # Device interface GUIDs
 GUID_DEVINTERFACE_USB_DEVICE = "{A5DCBF10-6530-11D2-901F-00C04FB951ED}"
@@ -184,36 +187,91 @@ def get_device_type(name, pnp_class, device_id):
     cls = (pnp_class or "").lower()
     dev_id = (device_id or "").lower()
 
-    # KEYBOARD
+    # Check for composite devices - need to inspect name more carefully
+    # USB Composite Devices are containers for multiple devices (keyboard, mouse, etc.)
+    # We need to infer the type from the device ID or skip them (child devices are detected separately)
+    if "composite device" in name_lower or "usb composite device" in name_lower:
+        # Check if we can infer type from device ID
+        if "keyboard" in cls or "keyboard" in dev_id or "keyboard" in name_lower:
+            return "Keyboard"
+        if "mouse" in cls or "mouse" in dev_id or "mouse" in name_lower:
+            return "Mouse"
+        
+        # For USB Composite Devices, check common VID/PID patterns
+        # Logitech composite devices (046D) are often keyboard/mouse combos
+        # Since child HID devices are detected separately, we can skip the composite device
+        # or infer it's likely a keyboard based on common patterns
+        # Check if device ID contains VID pattern (e.g., VID_046D)
+        if cls == "usb" and ("hid" in dev_id or "vid_046d" in dev_id or "046d" in dev_id.lower()):
+            # Logitech composite devices often contain keyboards
+            # Default to Keyboard for Logitech composite devices
+            return "Keyboard"
+        
+        # Also check for any composite device from known keyboard/mouse vendors
+        if cls == "usb" and any(vid in dev_id.upper() for vid in ["VID_046D", "VID_045E", "046D", "045E"]):
+            # Common keyboard/mouse vendors - likely a keyboard
+            return "Keyboard"
+        
+        # If we can't determine, return Unknown - user will select manually
+        # Child devices (like HID Keyboard Device) will be detected separately with correct types
+        return "Unknown Device"
+
+    # KEYBOARD - check first (before mouse, as some devices might have both)
     if ("keyboard" in name_lower or 
         "keyboard" in dev_id or 
         "keyboard" in cls or
-        "hid keyboard" in name_lower):
+        "hid keyboard" in name_lower or
+        "hid-compliant keyboard" in name_lower):
         return "Keyboard"
 
     # MOUSE
-    if "mouse" in name_lower or "mouse" in dev_id:
+    if ("mouse" in name_lower or 
+        "mouse" in dev_id or
+        "mouse" in cls or
+        "hid-compliant mouse" in name_lower or
+        "hid mouse device" in name_lower):
         return "Mouse"
 
-    # FLASH DRIVE
-    if "usbstor" in dev_id or "disk" in name_lower or "removable" in name_lower:
+    # WEBCAM / CAMERA
+    if ("webcam" in name_lower or 
+        "camera" in name_lower or
+        (cls == "image" and "camera" in name_lower)):
+        return "Camera / Scanner"  # Map to Scanner in frontend
+    
+    # SCANNER
+    if ("scanner" in name_lower or
+        (cls == "image" and "scanner" in name_lower)):
+        return "Camera / Scanner"  # Map to Scanner in frontend
+
+    # FLASH DRIVE / USB STORAGE
+    if ("usbstor" in dev_id or 
+        "disk" in name_lower or 
+        "removable" in name_lower or
+        "usb storage" in name_lower or
+        "flash drive" in name_lower or
+        "usb drive" in name_lower):
         return "Flash Drive"
 
     # PRINTER
-    if "printer" in name_lower:
+    if ("printer" in name_lower or
+        cls == "printer"):
         return "Printer"
 
-    # CAMERA / SCANNER
-    if "camera" in name_lower or cls == "image" or "scanner" in name_lower:
-        return "Camera / Scanner"
-
     # AUDIO (external headphones/headsets only)
-    if ("headphone" in name_lower or "headset" in name_lower or 
-        ("audio" in name_lower and "headphone" in name_lower)):
+    if ("headphone" in name_lower or 
+        "headset" in name_lower or 
+        ("audio" in name_lower and ("headphone" in name_lower or "headset" in name_lower)) or
+        cls == "audio"):
         return "Audio Device"
     
-    # Check PNP class
-    if cls == "keyboard" or cls == "hidclass":
+    # MONITOR (less common, but possible)
+    if ("monitor" in name_lower or
+        "display" in name_lower):
+        return "Unknown Device"  # Monitor not in dropdown, will need manual selection
+    
+    # Check PNP class as fallback
+    if cls == "keyboard" or (cls == "hidclass" and "keyboard" not in name_lower and "mouse" not in name_lower):
+        # If HID class but no clear indication, default to Keyboard
         if "hid" in dev_id:
             return "Keyboard"
     
@@ -403,6 +461,7 @@ def get_connected_devices():
                         manufacturer = get_registry_property(SPDRP_MFG)
                         description = get_registry_property(SPDRP_FRIENDLYNAME)
                         pnp_class = get_registry_property(SPDRP_CLASS)
+                        serial_number = get_registry_property(SPDRP_SERIALNUMBER)  # Get actual serial number
                         
                         # Extract VID, PID, instance
                         vid, pid, instance = extract_vid_pid_instance(device_instance_id)
@@ -419,8 +478,12 @@ def get_connected_devices():
                         # Skip "Unknown Device" types that are likely built-in
                         if dtype == "Unknown Device":
                             name_lower = (name or "").lower()
+                            manufacturer_lower = (manufacturer or "").lower()
                             # Additional check: if it's an unknown device with internal characteristics, skip it
-                            if "vendor-defined" in name_lower or "system controller" in name_lower:
+                            if ("vendor-defined" in name_lower or 
+                                "system controller" in name_lower or
+                                ("composite device" in name_lower and "standard" in manufacturer_lower)):
+                                # Filter out generic composite devices (child HID devices are detected separately)
                                 index += 1
                                 continue
                         
@@ -434,7 +497,8 @@ def get_connected_devices():
                                 "name": name,
                                 "manufacturer": manufacturer,
                                 "description": description,
-                                "pnp_class": pnp_class
+                                "pnp_class": pnp_class,
+                                "serial_number": serial_number  # Store actual serial number
                             }
                         
                         grouped[key]["types"].add(dtype)
@@ -538,6 +602,7 @@ def get_connected_devices():
                         manufacturer = get_registry_property_hid(SPDRP_MFG)
                         description = get_registry_property_hid(SPDRP_FRIENDLYNAME)
                         pnp_class = get_registry_property_hid(SPDRP_CLASS)
+                        serial_number = get_registry_property_hid(SPDRP_SERIALNUMBER)  # Get actual serial number
                         
                         # Filter out built-in devices BEFORE processing
                         if is_built_in_device(name, manufacturer, pnp_class, device_instance_id):
@@ -550,8 +615,12 @@ def get_connected_devices():
                         # Skip "Unknown Device" types that are likely built-in
                         if dtype == "Unknown Device":
                             name_lower = (name or "").lower()
+                            manufacturer_lower = (manufacturer or "").lower()
                             # Additional check: if it's an unknown device with internal characteristics, skip it
-                            if "vendor-defined" in name_lower or "system controller" in name_lower:
+                            if ("vendor-defined" in name_lower or 
+                                "system controller" in name_lower or
+                                ("composite device" in name_lower and "standard" in manufacturer_lower)):
+                                # Filter out generic composite devices (child HID devices are detected separately)
                                 index += 1
                                 continue
                         
@@ -565,8 +634,12 @@ def get_connected_devices():
                                 "name": name,
                                 "manufacturer": manufacturer,
                                 "description": description,
-                                "pnp_class": pnp_class
+                                "pnp_class": pnp_class,
+                                "serial_number": serial_number  # Store actual serial number
                             }
+                        # Update serial number if not already set or if this one is better
+                        elif serial_number and not grouped[key].get("serial_number"):
+                            grouped[key]["serial_number"] = serial_number
                         
                         grouped[key]["types"].add(dtype)
                         
@@ -614,7 +687,8 @@ def get_connected_devices():
                 "manufacturer": data["manufacturer"],
                 "description": data["description"],
                 "pnp_class": data["pnp_class"],
-                "device_key": key
+                "device_key": key,
+                "serial_number": data.get("serial_number", "")  # Include actual serial number
             })
 
         return result

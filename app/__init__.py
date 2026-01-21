@@ -12,7 +12,8 @@ from app.utils.logging_config import setup_logging
 # Initialize extensions
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    # No default_limits - each route specifies its own limit via @limiter.limit() decorator
+    # This prevents global limits from overriding route-specific limits
     storage_uri="memory://"
 )
 

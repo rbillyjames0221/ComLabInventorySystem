@@ -9,7 +9,7 @@ from app.models.device import Device
 from app.models.peripheral import Peripheral
 from app.models.user import User
 from app.utils.validators import validate_device_exists
-from app.utils.helpers import get_hostname, get_current_timestamp
+from app.utils.helpers import get_hostname, get_current_timestamp, get_machine_guid
 from app.utils.auth_decorators import user_required, login_required
 from werkzeug.utils import secure_filename
 import os
@@ -60,6 +60,7 @@ def register_device(token):
             unique_id = request.form.get("device_unique_id", "").strip() or None
             mac_address = request.form.get("device_mac_address", "").strip() or None
             selected_hostname = request.form.get("selected_hostname", "").strip()
+            machine_id = request.form.get("machine_id", "").strip() or None
             
             # Try to get full device info from client-side detection
             full_device_info_json = request.form.get("full_device_info", "").strip()
@@ -125,7 +126,7 @@ def register_device(token):
                 return f"⚠️ Device already registered in ComLab {existing[0]}. Cannot register in another ComLab.", 400
 
             # Insert device
-            Device.create(tag, location, hostname, ip_addr, comlab_id, unique_id, mac_address)
+            Device.create(tag, location, hostname, ip_addr, comlab_id, unique_id, mac_address, machine_id)
 
             # If detected device data is provided, register it as a peripheral
             detected_device_type = request.form.get("detected_device_type", "").strip()
@@ -172,38 +173,71 @@ def register_device(token):
 
             return render_template("success.html", tag=tag, hostname=hostname, ip=ip_addr)
 
-    return render_template("register_device.html", comlabs=comlabs, prefill_comlab_id=prefill_comlab_id)
+    machine_guid = get_machine_guid()
+    return render_template("register_device.html", comlabs=comlabs, prefill_comlab_id=prefill_comlab_id, machine_guid=machine_guid)
 
 
 @devices_bp.route("/generate_link", methods=["GET"])
 def generate_link():
     """Generate device registration link"""
-    token = secrets.token_urlsafe(16)
-    created_at = get_current_timestamp()
-    comlab_id = request.args.get("comlab_id", type=int)  # Optional comlab_id parameter
+    try:
+        token = secrets.token_urlsafe(16)
+        created_at = get_current_timestamp()
+        comlab_id = request.args.get("comlab_id", type=int)  # Optional comlab_id parameter
 
-    with sqlite3.connect(Config.DB_FILE) as conn:
-        # Check if comlab_id column exists, add it if not
-        cur = conn.cursor()
-        cur.execute("PRAGMA table_info(device_tokens)")
-        columns = [row[1] for row in cur.fetchall()]
-        
-        if "comlab_id" not in columns:
+        with sqlite3.connect(Config.DB_FILE) as conn:
+            # Check if comlab_id column exists, add it if not
+            cur = conn.cursor()
             try:
-                conn.execute("ALTER TABLE device_tokens ADD COLUMN comlab_id INTEGER")
+                cur.execute("PRAGMA table_info(device_tokens)")
+                columns = [row[1] for row in cur.fetchall()]
+            except sqlite3.OperationalError as e:
+                # Table might not exist, create it
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS device_tokens (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        token TEXT UNIQUE NOT NULL,
+                        created_at TEXT NOT NULL,
+                        comlab_id INTEGER
+                    )
+                """)
                 conn.commit()
-            except sqlite3.OperationalError:
-                pass  # Column might already exist
-        
-        # Insert token with comlab_id (can be None)
-        conn.execute(
-            "INSERT INTO device_tokens (token, created_at, comlab_id) VALUES (?, ?, ?)",
-            (token, created_at, comlab_id)
-        )
-        conn.commit()
+                columns = []
 
-    link = url_for("devices.register_device", token=token, _external=True)
-    return jsonify({"success": True, "link": link})
+            if "comlab_id" not in columns:
+                try:
+                    conn.execute("ALTER TABLE device_tokens ADD COLUMN comlab_id INTEGER")
+                    conn.commit()
+                except sqlite3.OperationalError:
+                    pass  # Column might already exist
+            
+            # Insert token with comlab_id (can be None)
+            try:
+                conn.execute(
+                    "INSERT INTO device_tokens (token, created_at, comlab_id) VALUES (?, ?, ?)",
+                    (token, created_at, comlab_id)
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                # Token collision (very rare), generate a new one
+                token = secrets.token_urlsafe(16)
+                conn.execute(
+                    "INSERT INTO device_tokens (token, created_at, comlab_id) VALUES (?, ?, ?)",
+                    (token, created_at, comlab_id)
+                )
+                conn.commit()
+
+        link = url_for("devices.register_device", token=token, _external=True)
+        return jsonify({"success": True, "link": link})
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "Failed to generate registration link. Please try again."
+        }), 500
 
 
 # Route removed - devices table view is now integrated into inventory management
