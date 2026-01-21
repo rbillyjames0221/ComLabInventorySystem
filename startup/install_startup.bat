@@ -35,3 +35,4 @@ echo The PC will be locked until a user logs in.
 echo.
 pause
 
+

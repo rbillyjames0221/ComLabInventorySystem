@@ -51,3 +51,4 @@ class StatusHistory:
             """, (limit,))
             return cur.fetchall()
 
+

@@ -3,7 +3,6 @@ import os
 from flask import Flask, session, request, redirect, url_for, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf.csrf import CSRFProtect
 from datetime import timedelta
 from app.config import Config
 from app.routes import auth_bp, admin_bp, devices_bp, api_bp
@@ -16,7 +15,6 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
-csrf = CSRFProtect()
 
 
 def create_app(config_class=Config):
@@ -35,7 +33,8 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     limiter.init_app(app)
-    csrf.init_app(app)
+    # Provide a no-op csrf_token helper for legacy templates
+    app.jinja_env.globals['csrf_token'] = lambda: ''
     
     # Setup logging
     setup_logging(app)

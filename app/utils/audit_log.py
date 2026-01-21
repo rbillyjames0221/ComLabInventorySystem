@@ -45,3 +45,4 @@ def get_audit_logs(user_id=None, action=None, limit=100):
         cur.execute(query, params)
         return cur.fetchall()
 
+

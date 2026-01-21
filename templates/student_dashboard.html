@@ -368,9 +368,7 @@ table tbody tr:nth-child(even):hover {
     <div class="main-content-wrapper">
         <!-- Top Bar -->
         {% include 'includes/topbar.html' %}
-        {% block topbar_actions %}
-        <button class="danger" onclick="requestEmergencyLogout()" style="background:#ffc107;color:#000;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;"><i class="fas fa-exclamation-triangle"></i> <span class="hide-mobile">Emergency Logout</span></button>
-        {% endblock %}
+        {% block topbar_actions %}{% endblock %}
 
         <!-- Page Content -->
         <div class="page-content">
@@ -670,22 +668,25 @@ document.addEventListener('DOMContentLoaded', () => {
 let cropper;
 
 // Open modal
-function openModal(id) {
+function openModal(id, dataUrl) {
     const modal = document.getElementById(id);
+    if (!modal) return;
 
     if (id === 'cropModal') {
         const profilePicInput = document.getElementById('profilePicInput');
-        const file = profilePicInput.files[0];
-
-        if (!file) { alert('Please select an image first.'); return; }
-
+        const file = profilePicInput?.files?.[0];
         const image = document.getElementById('cropImage');
-        const reader = new FileReader();
+        if (!image) {
+            console.error('Crop image element missing');
+            return;
+        }
 
-        reader.onload = function(e) {
-            image.src = e.target.result;
+        const initializeCropper = (src) => {
+            image.src = src;
             modal.style.display = 'flex';
-            if (cropper) cropper.destroy();
+            if (cropper) {
+                cropper.destroy();
+            }
 
             cropper = new Cropper(image, {
                 aspectRatio: 1,
@@ -696,9 +697,19 @@ function openModal(id) {
                 movable: true,
                 zoomable: true
             });
-        }
+        };
 
-        reader.readAsDataURL(file);
+        if (dataUrl) {
+            initializeCropper(dataUrl);
+        } else if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                initializeCropper(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert('Please select an image first.');
+        }
     } else {
         modal.style.display = 'flex';
     }
@@ -780,8 +791,8 @@ function previewProfileImage(input) {
                 // Remove error handler temporarily since we're loading from data URL (won't fail)
                 previewImg.onerror = null;
             }
-            // Open crop modal
-            openModal('cropModal');
+            // Open crop modal and pass the preview data URL
+            openModal('cropModal', e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -804,15 +815,6 @@ document.querySelectorAll('.modal .close').forEach(btn => {
         closeModal(modal.id);
     });
 });
-
-// Emergency logout
-function requestEmergencyLogout() {
-    if(confirm("Are you sure? Request will be sent to admin for approval.")){
-        fetch("/request_emergency_logout", { method: "POST" })
-        .then(r => r.json())
-        .then(d => alert(d.message));
-    }
-}
 
 // Force logout checker
 function checkForceLogout() {

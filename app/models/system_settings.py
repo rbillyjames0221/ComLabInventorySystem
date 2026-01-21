@@ -47,3 +47,4 @@ class SystemSettings:
             cur.execute("DELETE FROM system_settings WHERE setting_key = ?", (setting_key,))
             conn.commit()
 
+

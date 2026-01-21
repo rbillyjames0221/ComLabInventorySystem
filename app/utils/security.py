@@ -120,3 +120,4 @@ def update_last_login(username):
         cur.execute("UPDATE users SET last_login = ? WHERE username = ?", (timestamp, username))
         conn.commit()
 
+

@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root {
     --primary: #007bff;
@@ -1043,65 +1042,6 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Barcode Scanner Styles */
-.scanner-container {
-    width: 100%;
-    max-width: 400px;
-    margin: 10px auto;
-    border: 2px solid var(--primary);
-    border-radius: 8px;
-    overflow: hidden;
-    background: #000;
-}
-
-.scanner-message {
-    text-align: center;
-    padding: 10px;
-    background: #f8f9fa;
-    color: #333;
-    font-size: 14px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-}
-
-.scan-btn {
-    background: #17a2b8;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.scan-btn:hover {
-    background: #138496;
-    transform: translateY(-1px);
-}
-
-.stop-scan-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.stop-scan-btn:hover {
-    background: #c82333;
-    transform: translateY(-1px);
-}
-
 .detect-btn {
     background: #28a745;
     color: white;
@@ -1882,18 +1822,11 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
         <div class="pc-content-body" id="content-{{ pc.tag }}">
         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
             <button class="add-btn" onclick="openAddPeripheralModal('{{ pc.tag }}')"><i class="fa fa-plus"></i> Add Peripheral Manually</button>
-            <button type="button" class="scan-btn" onclick="startBarcodeScanner('{{ pc.tag }}')" id="scan-btn-{{ pc.tag }}">
-                <i class="fas fa-qrcode"></i> Scan Barcode
-            </button>
-            <button type="button" class="stop-scan-btn" onclick="stopBarcodeScanner('{{ pc.tag }}')" id="stop-scan-{{ pc.tag }}" style="display: none;">
-                <i class="fas fa-stop"></i> Stop Scanning
-            </button>
             <button type="button" class="detect-btn" onclick="toggleDeviceDetection('{{ pc.tag }}')" id="detect-btn-{{ pc.tag }}">
                 <i class="fas fa-plug"></i> Detect New Plugged Device
             </button>
         </div>
         <div id="detect-status-{{ pc.tag }}" class="detect-status"></div>
-        <div id="scanner-container-{{ pc.tag }}" class="scanner-container" style="display: none;"></div>
         
         <!-- Add Peripheral Manually Modal -->
         <div id="add-peripheral-modal-{{ pc.tag }}" class="detect-modal">
@@ -2545,124 +2478,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
-
-// Barcode Scanner Variables
-let html5QrcodeScanner = {};
-
-// Start barcode scanner
-async function startBarcodeScanner(pcTag) {
-    const containerId = `scanner-container-${pcTag}`;
-    const container = document.getElementById(containerId);
-    const stopBtn = document.getElementById(`stop-scan-${pcTag}`);
-    const scanBtn = document.getElementById(`scan-btn-${pcTag}`);
-    
-    // Show scanner container
-    container.style.display = 'block';
-    stopBtn.style.display = 'inline-block';
-    scanBtn.style.display = 'none';
-    
-    try {
-        // Initialize scanner
-        html5QrcodeScanner[pcTag] = new Html5Qrcode(containerId);
-        
-        // Start scanning
-        await html5QrcodeScanner[pcTag].start(
-            { facingMode: "environment" }, // Use back camera on mobile
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0,
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-            },
-            (decodedText, decodedResult) => {
-                // Success callback - barcode scanned!
-                handleBarcodeScanned(pcTag, decodedText);
-            },
-            (errorMessage) => {
-                // Error callback - ignore for continuous scanning
-            }
-        );
-    } catch (err) {
-        console.error("Error starting scanner:", err);
-        alert("Could not access camera. Please ensure camera permissions are granted.");
-        container.style.display = 'none';
-        stopBtn.style.display = 'none';
-        scanBtn.style.display = 'inline-block';
-    }
-}
-
-// Stop barcode scanner
-function stopBarcodeScanner(pcTag) {
-    const containerId = `scanner-container-${pcTag}`;
-    const container = document.getElementById(containerId);
-    const stopBtn = document.getElementById(`stop-scan-${pcTag}`);
-    const scanBtn = document.getElementById(`scan-btn-${pcTag}`);
-    
-    if (html5QrcodeScanner[pcTag]) {
-        html5QrcodeScanner[pcTag].stop().then(() => {
-            html5QrcodeScanner[pcTag].clear();
-            container.style.display = 'none';
-            stopBtn.style.display = 'none';
-            scanBtn.style.display = 'inline-block';
-        }).catch(err => {
-            console.error("Error stopping scanner:", err);
-            container.style.display = 'none';
-            stopBtn.style.display = 'none';
-            scanBtn.style.display = 'inline-block';
-        });
-    } else {
-        container.style.display = 'none';
-        stopBtn.style.display = 'none';
-        scanBtn.style.display = 'inline-block';
-    }
-}
-
-// Handle scanned barcode data
-function handleBarcodeScanned(pcTag, barcodeData) {
-    // Stop scanning after successful scan
-    stopBarcodeScanner(pcTag);
-    
-    // Open the add peripheral modal if not already open
-    openAddPeripheralModal(pcTag);
-    
-    // Parse barcode data
-    // Option 1: If barcode contains structured data (e.g., JSON or delimited)
-    try {
-        // Try parsing as JSON first
-        const parsed = JSON.parse(barcodeData);
-        if (parsed.brand) document.getElementById(`manual-device-name-${pcTag}`).value = parsed.brand;
-        if (parsed.serial) document.getElementById(`manual-device-serial-${pcTag}`).value = parsed.serial;
-        if (parsed.unique_id) document.getElementById(`manual-device-unique-id-${pcTag}`).value = parsed.unique_id;
-        if (parsed.vendor) document.getElementById(`manual-device-vendor-${pcTag}`).value = parsed.vendor;
-        if (parsed.product) document.getElementById(`manual-device-product-${pcTag}`).value = parsed.product;
-        if (parsed.type) {
-            const typeSelect = document.getElementById(`manual-device-type-${pcTag}`);
-            typeSelect.value = parsed.type;
-        }
-        alert(`Barcode scanned successfully!\n\nData populated from barcode.`);
-        return;
-    } catch (e) {
-        // Not JSON, continue with other parsing methods
-    }
-    
-    // Option 2: If barcode is delimited (e.g., "BRAND|SERIAL|UNIQUE_ID|VENDOR|PRODUCT")
-    if (barcodeData.includes('|')) {
-        const parts = barcodeData.split('|');
-        if (parts.length >= 1 && parts[0].trim()) document.getElementById(`manual-device-name-${pcTag}`).value = parts[0].trim();
-        if (parts.length >= 2 && parts[1].trim()) document.getElementById(`manual-device-serial-${pcTag}`).value = parts[1].trim();
-        if (parts.length >= 3 && parts[2].trim()) document.getElementById(`manual-device-unique-id-${pcTag}`).value = parts[2].trim();
-        if (parts.length >= 4 && parts[3].trim()) document.getElementById(`manual-device-vendor-${pcTag}`).value = parts[3].trim();
-        if (parts.length >= 5 && parts[4].trim()) document.getElementById(`manual-device-product-${pcTag}`).value = parts[4].trim();
-        alert(`Barcode scanned successfully!\n\nData populated from barcode.`);
-        return;
-    }
-    
-    // Option 3: Default - treat entire barcode as serial number
-    document.getElementById(`manual-device-serial-${pcTag}`).value = barcodeData;
-    
-    // Show success message
-    alert(`Barcode scanned: ${barcodeData}\n\nSerial number populated. Please fill in remaining fields manually.`);
-}
 
 // Device Detection Variables
 let deviceDetectionIntervals = {};
