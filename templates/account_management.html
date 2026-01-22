@@ -27,6 +27,48 @@
     }
 
     body { font-family:'Segoe UI',sans-serif; background:#eef2f7; margin:0; padding:0; }
+    .top-actions-row {
+        width:95%;
+        margin:10px auto 5px auto;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+    .top-actions-left {
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+    .top-action-btn {
+        background:white;
+        color:#007bff;
+        border:none;
+        padding:10px 16px;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:600;
+        min-height:44px;
+        position:relative;
+        display:flex;
+        align-items:center;
+        gap:6px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.08);
+    }
+    .create-account-btn {
+        background:#28a745;
+        color:white;
+        padding:10px 20px;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:600;
+        display:flex;
+        align-items:center;
+        gap:6px;
+        box-shadow:0 4px 12px rgba(40,167,69,0.4);
+    }
     /* Pending Modal Buttons Hover */
     .action-btn {
         padding: 6px 12px;
@@ -131,16 +173,9 @@
     <div class="main-content-wrapper">
         <!-- Top Bar -->
         {% include 'includes/topbar.html' %}
-        {% block topbar_actions %}
-        <button id="pendingBtn" class="btn-badge" style="background:white;color:#007bff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;position:relative;">
-            <i class="fas fa-user-clock"></i> <span class="hide-mobile">Pending Accounts</span>
-            <span id="pendingCount" class="badge">0</span>
-        </button>
-        <button id="profileEditsBtn" class="btn-badge" style="background:white;color:#007bff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;min-height:44px;position:relative;">
-            <i class="fas fa-user-edit"></i> <span class="hide-mobile">Pending Profile Edits</span>
-            <span id="profileEditsCount" class="badge">0</span>
-        </button>
-        {% endblock %}
+{% block topbar_actions %}
+        <!-- buttons moved below -->
+{% endblock %}
 
         <!-- Page Content -->
         <div class="page-content">
@@ -152,11 +187,25 @@
     <button class="toggle-btn" onclick="switchType('admin')">Admins</button>
 </div>
 
-<!-- Create Account Button -->
-<div style="width:95%; margin:15px auto; text-align:right;">
-    <button onclick="openCreateModal()" style="background:#28a745; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600;">
-        <i class="fas fa-plus"></i> Create New Account
-    </button>
+<!-- Top Action Row -->
+<div class="top-actions-row">
+    <div class="top-actions-left">
+        <button id="pendingBtn" class="btn-badge top-action-btn">
+            <i class="fas fa-user-clock"></i>
+            <span class="hide-mobile">Pending Accounts</span>
+            <span id="pendingCount" class="badge">0</span>
+        </button>
+        <button id="profileEditsBtn" class="btn-badge top-action-btn">
+            <i class="fas fa-user-edit"></i>
+            <span class="hide-mobile">Pending Profile Edits</span>
+            <span id="profileEditsCount" class="badge">0</span>
+        </button>
+    </div>
+    <div class="top-actions-right">
+        <button onclick="openCreateModal()" class="create-account-btn">
+            <i class="fas fa-plus"></i> Create New Account
+        </button>
+    </div>
 </div>
 
 <!-- Filters (Users) -->
@@ -242,7 +291,7 @@
     <td>
         <button class="edit-btn" data-user-id="{{ user.id }}" onclick="openEditModal(this, 'user')">Edit</button>
         <button class="reset-password-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}" onclick="openResetPasswordModal(this, 'user')" style="background:#ffc107; padding:6px 12px; border:none; border-radius:6px; color:white; cursor:pointer; margin-right:5px;">Reset Password</button>
-        <button class="delete-btn" data-user-id="{{ user.id }}" onclick="deleteUser(this)">Delete</button>
+        <button class="delete-btn" data-user-id="{{ user.id }}" onclick="prepareDeleteEntity('user', this)">Delete</button>
     </td>
 </tr>
 {% endfor %}
@@ -276,7 +325,7 @@
     <td>
         <button class="edit-btn" data-admin-id="{{ admin.id }}" onclick="openEditModal(this, 'admin')">Edit</button>
         <button class="reset-password-btn" data-admin-id="{{ admin.id }}" data-username="{{ admin.username }}" onclick="openResetPasswordModal(this, 'admin')" style="background:#ffc107; padding:6px 12px; border:none; border-radius:6px; color:white; cursor:pointer; margin-right:5px;">Reset Password</button>
-        <button class="delete-btn" data-admin-id="{{ admin.id }}" onclick="deleteAdmin(this)">Delete</button>
+        <button class="delete-btn" data-admin-id="{{ admin.id }}" onclick="prepareDeleteEntity('admin', this)">Delete</button>
     </td>
 </tr>
 {% endfor %}
@@ -385,6 +434,7 @@
             <div style="margin-bottom:15px;">
                 <label style="display:block; margin-bottom:5px; font-weight:600;">Password:</label>
                 <input type="password" id="createPassword" required style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                <div class="caps-warning" id="createPasswordCaps">Caps Lock is on</div>
             </div>
             <div id="createGradeSection" style="margin-bottom:15px;">
                 <label style="display:block; margin-bottom:5px; font-weight:600;">Grade:</label>
@@ -458,11 +508,13 @@
             <div style="margin-bottom:15px;">
                 <label style="display:block; margin-bottom:5px; font-weight:600;">New Password:</label>
                 <input type="password" id="resetNewPassword" required style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                <div class="caps-warning" id="resetNewCaps">Caps Lock is on</div>
             </div>
             
             <div style="margin-bottom:15px;">
                 <label style="display:block; margin-bottom:5px; font-weight:600;">Confirm New Password:</label>
                 <input type="password" id="resetConfirmPassword" required style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                <div class="caps-warning" id="resetConfirmCaps">Caps Lock is on</div>
                 <small id="passwordMatchError" style="color:#dc3545; display:none; margin-top:5px;">Passwords do not match!</small>
             </div>
             
@@ -477,6 +529,20 @@
                 <button type="submit" class="apply-btn" style="background:#ffc107;">Reset Password</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="modal">
+    <div class="modal-content" style="max-width:420px;">
+        <span class="close" onclick="closeDeleteConfirm()">&times;</span>
+        <h3>Confirm Deletion</h3>
+        <p>Type <strong>PROCEED</strong> and click Delete to permanently remove <strong id="deleteConfirmTarget">this user</strong>.</p>
+        <input type="text" id="deleteConfirmInput" placeholder="Type PROCEED to confirm" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:10px;">
+        <div style="margin-top:15px; text-align:right;">
+            <button class="clear-btn" type="button" onclick="closeDeleteConfirm()">Cancel</button>
+            <button class="apply-btn" type="button" id="deleteConfirmBtn" onclick="executeDelete()" disabled>Delete</button>
+        </div>
     </div>
 </div>
 
@@ -1013,50 +1079,80 @@
     // Optionally, refresh every 10 seconds
     setInterval(updatePendingCounts, 10000);
 
+    function monitorCapsLockField(inputId, indicatorId) {
+        const input = document.getElementById(inputId);
+        const indicator = document.getElementById(indicatorId);
+        if (!input || !indicator) return;
+
+        const updateCaps = (event) => {
+            const caps = event.getModifierState && event.getModifierState('CapsLock');
+            indicator.style.display = caps ? 'block' : 'none';
+        };
+
+        ['keydown', 'keyup', 'focus'].forEach(evt => {
+            input.addEventListener(evt, updateCaps);
+        });
+        input.addEventListener('blur', () => indicator.style.display = 'none');
+    }
+
     // ------------------ Delete helpers ------------------
-    function deleteUser(button) {
-        const userId = button.dataset.userId;
-        fetch(`/delete/user/${userId}`, {
-            method: 'POST',
+    let deleteCandidate = null;
+
+    function prepareDeleteEntity(type, button) {
+        const row = button.closest("tr");
+        deleteCandidate = {
+            type,
+            id: type === "admin" ? button.dataset.adminId : button.dataset.userId,
+            row
+        };
+        const targetName = row?.cells?.[0]?.innerText?.trim() || "this user";
+        document.getElementById("deleteConfirmTarget").textContent = targetName;
+        document.getElementById("deleteConfirmInput").value = "";
+        document.getElementById("deleteConfirmBtn").disabled = true;
+        document.getElementById("deleteConfirmModal").style.display = "block";
+    }
+
+    function closeDeleteConfirm() {
+        document.getElementById("deleteConfirmModal").style.display = "none";
+        deleteCandidate = null;
+    }
+
+    function updateDeleteButtonState() {
+        const input = document.getElementById("deleteConfirmInput");
+        const confirmBtn = document.getElementById("deleteConfirmBtn");
+        confirmBtn.disabled = input.value.trim().toUpperCase() !== "PROCEED";
+    }
+
+    function executeDelete() {
+        if (!deleteCandidate) return;
+        const endpoint = deleteCandidate.type === "admin"
+            ? `/delete/admin/${deleteCandidate.id}`
+            : `/delete/user/${deleteCandidate.id}`;
+        fetch(endpoint, {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             }
         })
         .then(response => {
             if (response.ok) {
-                const row = button.parentNode.parentNode;
-                row.parentNode.removeChild(row);
+                deleteCandidate.row?.remove();
+                closeDeleteConfirm();
             } else {
-                alert('Failed to delete user.');
+                alert("Failed to delete user.");
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred.');
+            console.error("Error:", error);
+            alert("An error occurred.");
         });
     }
 
-    function deleteAdmin(button) {
-        const adminId = button.dataset.adminId;
-        fetch(`/delete/admin/${adminId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                const row = button.parentNode.parentNode;
-                row.parentNode.removeChild(row);
-            } else {
-                alert('Failed to delete admin.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred.');
-        });
-    }
+    document.getElementById("deleteConfirmInput").addEventListener("input", updateDeleteButtonState);
+    
+    monitorCapsLockField('createPassword', 'createPasswordCaps');
+    monitorCapsLockField('resetNewPassword', 'resetNewCaps');
+    monitorCapsLockField('resetConfirmPassword', 'resetConfirmCaps');
 
     // ------------------ Create Account Functions ------------------
     function openCreateModal(){

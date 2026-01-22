@@ -118,60 +118,6 @@
                     </ul>
                 </li>
 
-                <!-- Inventory Management (Context-aware) -->
-                {% if comlab_id %}
-                <li class="menu-item has-children">
-                    <a href="#" class="menu-link" onclick="toggleSubmenu(this); return false;">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span class="menu-text">Inventory</span>
-                        <i class="fas fa-chevron-down menu-arrow"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li class="submenu-item">
-                            <a href="/comlab/{{ comlab_id }}/inventory/view_summary" class="submenu-link {% if current_page == 'view_summary' %}active{% endif %}">
-                                <i class="fas fa-chart-pie"></i>
-                                <span>View Summary</span>
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="/comlab/{{ comlab_id }}/inventory/view_alerts" class="submenu-link {% if current_page == 'view_alerts' %}active{% endif %}">
-                                <i class="fas fa-bell"></i>
-                                <span>View Alerts</span>
-                                {% if alerts_count and alerts_count > 0 %}
-                                <span class="menu-badge">{{ alerts_count }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="/comlab/{{ comlab_id }}/inventory/peripheral_summary" class="submenu-link {% if current_page == 'peripheral_summary' %}active{% endif %}">
-                                <i class="fas fa-list-alt"></i>
-                                <span>Peripheral Summary</span>
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="/comlab/{{ comlab_id }}/inventory/usb_devices" class="submenu-link {% if current_page == 'usb_devices' %}active{% endif %}">
-                                <i class="fas fa-usb"></i>
-                                <span>USB Devices</span>
-                            </a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="/comlab/{{ comlab_id }}/inventory/view_reports" class="submenu-link {% if current_page == 'view_reports' %}active{% endif %}">
-                                <i class="fas fa-file-alt"></i>
-                                <span>Reports</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                {% endif %}
-
-                <!-- Settings -->
-                <li class="menu-item">
-                    <a href="/settings" class="menu-link {% if current_page == 'settings' %}active{% endif %}">
-                        <i class="fas fa-cog"></i>
-                        <span class="menu-text">Settings</span>
-                    </a>
-                </li>
-
             {% else %}
                 <!-- Student Menu -->
                 

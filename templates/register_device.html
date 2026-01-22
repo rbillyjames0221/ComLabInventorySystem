@@ -374,10 +374,6 @@
             <i class="fas fa-info-circle"></i> Click to automatically detect your device's unique identity
         </p>
 
-        <button type="button" id="scanNetworkBtn" class="detect-btn" style="background: #17a2b8; margin-top: 10px;">
-            <i class="fas fa-network-wired"></i> Scan Network for Devices
-        </button>
-
         <div class="status-message" id="statusMessage"></div>
 
         <div class="device-info" id="deviceInfo" style="display: none;">
@@ -421,31 +417,6 @@
 
         <button type="submit">Register Device</button>
     </form>
-</div>
-
-<!-- Network Devices Modal -->
-<div id="networkModal" class="network-modal">
-    <div class="network-modal-content">
-        <div class="network-modal-header">
-            <h3><i class="fas fa-network-wired"></i> Detected Network Devices</h3>
-            <span class="close-modal" onclick="closeNetworkModal()">&times;</span>
-        </div>
-        
-        <div id="scanningOverlay" class="scanning-overlay">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Scanning network for devices...</p>
-        </div>
-        
-        <div id="devicesList" class="devices-list" style="display: none;">
-            <p id="noDevicesMessage" style="text-align: center; color: #6c757d; padding: 20px; display: none;">
-                No devices found on the network. Make sure devices are connected to the same network.
-            </p>
-            <div id="devicesContainer"></div>
-            <button id="selectDeviceBtn" class="select-device-btn" onclick="selectDetectedDevice()" disabled>
-                Select Device
-            </button>
-        </div>
-    </div>
 </div>
 
 <script src="/static/js/client_device_detection.js"></script>
@@ -564,131 +535,6 @@ async function verifyDeviceIdentity(identityData) {
 let detectedNetworkDevices = [];
 let selectedDeviceIndex = -1;
 
-document.getElementById('scanNetworkBtn').addEventListener('click', function() {
-    openNetworkModal();
-    scanNetworkDevices();
-});
-
-function openNetworkModal() {
-    document.getElementById('networkModal').style.display = 'block';
-    document.getElementById('scanningOverlay').style.display = 'block';
-    document.getElementById('devicesList').style.display = 'none';
-    detectedNetworkDevices = [];
-    selectedDeviceIndex = -1;
-}
-
-function closeNetworkModal() {
-    document.getElementById('networkModal').style.display = 'none';
-}
-
-async function scanNetworkDevices() {
-    try {
-        const response = await fetch('/api/scan_network_devices');
-        const data = await response.json();
-        
-        document.getElementById('scanningOverlay').style.display = 'none';
-        document.getElementById('devicesList').style.display = 'block';
-        
-        if (data.success && data.devices && data.devices.length > 0) {
-            detectedNetworkDevices = data.devices;
-            renderDevicesList(data.devices);
-            document.getElementById('noDevicesMessage').style.display = 'none';
-        } else {
-            document.getElementById('devicesContainer').innerHTML = '';
-            document.getElementById('noDevicesMessage').style.display = 'block';
-            document.getElementById('selectDeviceBtn').disabled = true;
-        }
-    } catch (error) {
-        console.error('Error scanning network:', error);
-        document.getElementById('scanningOverlay').style.display = 'none';
-        document.getElementById('devicesList').style.display = 'block';
-        document.getElementById('devicesContainer').innerHTML = 
-            '<p style="text-align: center; color: #dc3545; padding: 20px;">Error scanning network. Please try again.</p>';
-        document.getElementById('selectDeviceBtn').disabled = true;
-    }
-}
-
-function renderDevicesList(devices) {
-    const container = document.getElementById('devicesContainer');
-    container.innerHTML = '';
-    
-    devices.forEach((device, index) => {
-        const deviceItem = document.createElement('div');
-        deviceItem.className = 'device-item';
-        deviceItem.onclick = () => selectDeviceItem(index);
-        
-        const typeClass = device.device_type.toLowerCase().replace(' ', '-');
-        
-        deviceItem.innerHTML = `
-            <div class="device-info-left">
-                <div class="device-name">${device.hostname}</div>
-                <div class="device-details"><strong>IP:</strong> ${device.ip}</div>
-                <div class="device-details"><strong>MAC:</strong> ${device.mac_address}</div>
-                <span class="device-type-badge ${typeClass}">${device.device_type}</span>
-            </div>
-            <div class="device-info-right">
-                <i class="fas fa-check-circle" style="font-size: 24px; color: #28a745; display: none;" id="check-${index}"></i>
-            </div>
-        `;
-        
-        container.appendChild(deviceItem);
-    });
-}
-
-function selectDeviceItem(index) {
-    // Remove previous selection
-    if (selectedDeviceIndex >= 0) {
-        const prevItem = document.querySelectorAll('.device-item')[selectedDeviceIndex];
-        if (prevItem) {
-            prevItem.classList.remove('selected');
-            const prevCheck = document.getElementById(`check-${selectedDeviceIndex}`);
-            if (prevCheck) prevCheck.style.display = 'none';
-        }
-    }
-    
-    // Select new item
-    selectedDeviceIndex = index;
-    const selectedItem = document.querySelectorAll('.device-item')[index];
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
-        const checkIcon = document.getElementById(`check-${index}`);
-        if (checkIcon) checkIcon.style.display = 'block';
-        document.getElementById('selectDeviceBtn').disabled = false;
-    }
-}
-
-function selectDetectedDevice() {
-    if (selectedDeviceIndex >= 0 && detectedNetworkDevices[selectedDeviceIndex]) {
-        const device = detectedNetworkDevices[selectedDeviceIndex];
-        
-        // Fill in the PC Tag field with hostname or IP
-        document.getElementById('pcTag').value = device.hostname || device.ip;
-        
-        // Store the selected hostname, MAC address, and generate unique ID for registration
-        document.getElementById('selectedHostname').value = device.hostname || device.ip;
-        document.getElementById('deviceMacAddressInput').value = device.mac_address || '';
-        
-        // Generate unique ID if MAC address is available
-        if (device.mac_address && device.mac_address !== 'Unknown') {
-            // Generate a deterministic UUID5 based on MAC + hostname
-            // This will be done server-side, but we can store MAC for now
-        }
-        
-        // Close modal
-        closeNetworkModal();
-        
-        // Show success message
-        showStatus('success', `Selected device: ${device.hostname || device.ip} (${device.device_type})`);
-    }
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('networkModal');
-    if (event.target == modal) {
-        closeNetworkModal();
-    }
-    }
 </script>
 
 <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>

@@ -410,6 +410,38 @@ body {
     transform: scale(0.98);
 }
 
+.inventory-header-actions {
+    width: 95%;
+    margin: 15px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.inventory-header-actions .info-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.info-btn {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.info-btn:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
 .search-bar-container {
     display: flex;
     justify-content: space-between;
@@ -1866,9 +1898,30 @@ input.inline-edit { width:100%; padding:4px; border-radius:4px; border:1px solid
 {% if devices %}
 <!-- Add Device Button and Search Bar Container -->
 <div class="action-bar-container">
-    <button onclick="openAddDeviceModal()" class="add-device-btn">
-        <i class="fas fa-plus"></i> <span class="hide-mobile">Add Device</span>
-    </button>
+    <div class="inventory-header-actions">
+        <div class="info-buttons">
+            <button onclick="openAddDeviceModal()" class="add-device-btn">
+                <i class="fas fa-plus"></i> <span class="hide-mobile">Add Device</span>
+            </button>
+        </div>
+        <div class="info-buttons">
+            <a href="/comlab/{{ comlab_id }}/inventory/view_summary" class="info-btn">
+                <i class="fas fa-chart-pie"></i> <span>View Summary</span>
+            </a>
+            <a href="/comlab/{{ comlab_id }}/inventory/view_alerts" class="info-btn">
+                <i class="fas fa-bell"></i> <span>View Alerts</span>
+            </a>
+            <a href="/comlab/{{ comlab_id }}/inventory/peripheral_summary" class="info-btn">
+                <i class="fas fa-list-alt"></i> <span>Peripheral Summary</span>
+            </a>
+            <a href="/comlab/{{ comlab_id }}/inventory/usb_devices" class="info-btn">
+                <i class="fas fa-usb"></i> <span>USB Devices</span>
+            </a>
+            <a href="/comlab/{{ comlab_id }}/inventory/view_reports" class="info-btn">
+                <i class="fas fa-file-alt"></i> <span>Reports</span>
+            </a>
+        </div>
+    </div>
     
     <!-- Search Bar and View Toggle -->
     <div class="search-bar-container">
