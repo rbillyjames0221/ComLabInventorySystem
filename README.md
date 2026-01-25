@@ -198,6 +198,43 @@ ComLabInventorySystem/
 └── requirements.txt         # Python dependencies
 ```
 
+### 🧭 Dashboard Pages & Related Files
+
+Beginner-friendly navigation starts with understanding the **route → template → static asset** chain for each dashboard. Here are the key UI components, their routes, and any files that tie them together.
+
+#### Admin experience
+- **Route files:** `app/routes/admin.py` (blueprint `admin_bp`)
+- **Templates:** `templates/admin_dashboard.html`, `templates/account_management.html`, `templates/admin_users.html`, `templates/admin_settings.html`
+- **Purpose:** `/admin` lists labs and supports inline editing (toggle `?edit=1` to enter edit mode). `/account-management` paginates active users by role while the settings page lets admins update `SystemSettings` values.
+- **Supporting files:** `templates/includes/sidebar.html` + `templates/includes/topbar.html` inject shared navigation; `static/css/sidebar.css` + `static/css/responsive.css` style the layout; `static/js/sidebar.js` + `static/js/topbar-menu.js` handle collapsible menus and dropdown toggles.
+- **Beginner tip:** When the dashboard needs to add a lab, the JavaScript posts to `/admin/add_lab`, `/rename_lab`, or `/remove_lab`. Changes to labs are simply writes to the `labs` table via SQLite, so follow the pattern in `admin.py` to keep forms consistent.
+
+#### Inventory and peripheral management
+- **Route files:** `app/routes/devices.py` (blueprint `devices_bp`)
+- **Main template:** `templates/inventory.html` used by `/comlab/<lab_id>/inventory`
+  - Renders every PC (`Device.get_by_location`) plus peripherals grouped by PC tag (`Peripheral.get_by_lab`).
+  - Pulls `lab_name` from the `labs` table so the header shows the friendly lab name.
+- **Supporting dashboards:** `/inventory/peripheral` → `templates/peripheral_summary.html`, `/inventory/view_alerts` → `templates/view_alerts.html`, `/inventory/view_summary` → `templates/view_summary.html`, `/inventory/display_usb_devices` → `templates/usb_devices.html`, `/inventory/view_reports` → `templates/view_reports.html`. Alias routes (like `/comlab/<lab_id>/devices`) redirect to these views for backward compatibility.
+- **Static helpers:** `static/js/alerts.js` updates alert badges, and `static/js/client_device_detection.js` supplies device fingerprints for registration. Every template includes the sidebar/topbar partials, so new dashboards inherit navigation automatically.
+- **Beginner tip:** Follow one Flask view from SQL query → `dict(row)` conversion → `render_template`. That flow shows how data is exposed to Jinja and where to add new fields. For example, to display a new peripheral column, edit `templates/inventory.html` and update the dictionary keys sent from `comlab_inventory()`.
+
+#### Student dashboard
+- **Route file:** `app/routes/devices.py`
+- **Template:** `templates/student_dashboard.html`
+- **Features:** Displays the logged-in student’s profile (`User.get_profile`), current PC/peripheral pairings and anomalies, emergency logout requests, and forms to upload avatars or change passwords. Peripheral status auto-updates by calling `app.utils.device_detector.get_connected_devices()` when running on Windows.
+- **Beginner tip:** The template shows how flash messages (success, error) surface after POST actions such as `/upload_profile` or `/change_password`. Trace `devices.py` to see how each POST handler wraps in a redirect back to `/student_dashboard`.
+
+#### Registration & helper routes
+- `/generate_link` + `/register_device/<token>` both render `templates/register_device.html`. The GET route shows a simple form (`static/js/login.js`) to generate tokens, while the POST route records devices and detected peripherals via `Device.create()` and `Peripheral.create()`.
+- **Beginner tip:** Client detection helpers (`app.utils.client_device_detector`, `app.utils.helpers`) feed hidden fields to this form. If you add more metadata, update both the HTML form and the POST handler so Flask can access `request.form["your_field"]`.
+
+#### Shared helpers
+- **Navigation includes:** `templates/includes/sidebar.html` and `templates/includes/topbar.html` are reused across admin, inventory, and student dashboards. Edit them to add new menu items for any new route.
+- **Global utils:** `app/utils/sidebar_context.py`, `helpers.py`, `validators.py`, and `constants.py` group shared logic like lab listing, device fingerprinting, or string validation. Reuse these helpers before writing new SQL or validation code.
+- **Styles & scripts:** All dashboards pull `static/css/sidebar.css`, `static/css/login.css`, and the JS files mentioned earlier. When you create new templates, include the necessary CSS/JS by following the structure already present in `templates/includes/topbar.html`.
+
+This breakdown helps beginners trace each dashboard from the HTTP request through the template rendering and static assets, making it easier to extend functionality step by step.
+
 ### API Endpoints
 
 #### Authentication
